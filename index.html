@@ -4,10 +4,25 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>감정 일기</title>
+    <meta name="theme-color" content="#faf9f6" />
+    <meta name="description" content="오늘의 감정과 생각을 기록하는 나만의 감정 일기장" />
+    <title>마음 한 페이지 | 감정 일기</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main style="box-sizing:border-box;max-width:620px;margin:12vh auto;padding:32px;font-family:system-ui,sans-serif;color:#292524">
+        <p style="font-size:14px;font-weight:700;letter-spacing:.12em;color:#e11d48">마음 한 페이지</p>
+        <h1 style="font-size:28px">앱을 실행할 서버가 필요해요</h1>
+        <p style="line-height:1.8;color:#57534e">
+          지금은 HTML 미리보기(Live Server)로 열려 있어 일기 앱이 표시되지 않습니다.
+          VS Code 터미널에서 <code>npm run dev</code>를 실행한 다음 Vite 주소로 접속해 주세요.
+        </p>
+        <a href="http://localhost:5173/" style="display:inline-block;margin-top:12px;padding:12px 18px;border-radius:12px;background:#292524;color:white;text-decoration:none;font-weight:600">
+          감정 일기 열기
+        </a>
+        <p style="margin-top:16px;font-size:13px;color:#78716c">주소: http://localhost:5173/</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
