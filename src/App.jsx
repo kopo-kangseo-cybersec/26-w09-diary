@@ -25,6 +25,13 @@ function formatCreatedAt(value) {
   }).format(new Date(value))
 }
 
+const todayLabel = new Intl.DateTimeFormat('ko-KR', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  weekday: 'long',
+}).format(new Date())
+
 function App() {
   const [diaries, setDiaries] = useState([])
   const [content, setContent] = useState('')
@@ -125,27 +132,40 @@ function App() {
   const selectedEmotion = emotions.find((item) => item.value === emotion)
 
   return (
-    <main className="min-h-screen bg-[#f7f6f2] px-4 py-8 text-stone-800 sm:px-6 sm:py-12">
-      <div className="mx-auto max-w-3xl">
-        <header className="mb-9 text-center sm:mb-11">
-          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#e8eee4] text-2xl shadow-sm">
-            🌿
+    <main className="diary-shell min-h-screen px-4 py-8 text-stone-800 sm:px-6 sm:py-12">
+      <div className="diary-layout mx-auto max-w-3xl">
+        <header className="diary-header mb-9 sm:mb-11">
+          <div className="diary-brand">
+            <span className="diary-brand-icon" aria-hidden="true">✿</span>
+            <span>MY LITTLE JOURNAL</span>
           </div>
-          <p className="mb-2 text-sm font-semibold tracking-[0.2em] text-[#71816b]">
-            MY LITTLE MOMENT
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-stone-800 sm:text-4xl">
-            오늘의 감정 일기
-          </h1>
-          <p className="mt-3 text-sm text-stone-500 sm:text-base">
-            오늘의 마음을 천천히 들여다보고 기록해 보세요.
-          </p>
+          <div className="diary-heading-row">
+            <div>
+              <p className="diary-date-label">{todayLabel}</p>
+              <h1 className="diary-title">
+                오늘의 마음을 <span>기록해요</span>
+              </h1>
+              <p className="diary-subtitle">
+                사소한 순간도 포근하게 담아두는 나만의 일기장
+              </p>
+            </div>
+            <div className="diary-header-sticker" aria-hidden="true">
+              <span>오늘도</span>
+              <span className="diary-sticker-heart">♥</span>
+              <span>수고했어!</span>
+            </div>
+          </div>
         </header>
 
-        <section className="mb-9 rounded-3xl border border-stone-200/80 bg-white p-5 shadow-[0_12px_40px_-28px_rgba(54,63,46,0.3)] sm:mb-11 sm:p-8">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-stone-800">지금 어떤 기분인가요?</h2>
-            <p className="mt-1 text-sm text-stone-500">오늘의 감정을 하나 골라주세요.</p>
+        <section className="diary-write-card mb-9 rounded-3xl p-5 sm:mb-11 sm:p-8">
+          <div className="diary-section-heading mb-6">
+            <span className="diary-heading-sparkle" aria-hidden="true">✎</span>
+            <div>
+              <p className="diary-kicker">A PAGE FOR TODAY</p>
+              <h2 className="text-lg font-semibold text-stone-800">지금 어떤 기분인가요?</h2>
+              <p className="mt-1 text-sm text-stone-500">오늘의 감정을 하나 골라주세요.</p>
+            </div>
+            <span className="diary-tape" aria-hidden="true" />
           </div>
 
           <div className="mb-6 grid grid-cols-5 gap-2 sm:gap-3" aria-label="감정 선택">
@@ -157,7 +177,7 @@ function App() {
                   type="button"
                   aria-pressed={isSelected}
                   onClick={() => setEmotion(item.value)}
-                  className={`flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border px-1 py-3 text-xs transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#71816b] sm:min-h-24 sm:text-sm ${
+                  className={`diary-emotion-button flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border px-1 py-3 text-xs transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#71816b] sm:min-h-24 sm:text-sm ${
                     isSelected
                       ? `${item.color} border-transparent ring-2 ring-current`
                       : 'border-stone-200 bg-stone-50 text-stone-500 hover:border-stone-300 hover:bg-stone-100'
@@ -188,44 +208,45 @@ function App() {
               required
               aria-invalid={Boolean(validationMessage)}
               aria-describedby={validationMessage ? 'diary-validation' : undefined}
-              className="w-full resize-y rounded-2xl border border-stone-200 bg-[#fcfcfa] px-4 py-4 text-sm leading-7 text-stone-700 outline-none transition placeholder:text-stone-400 focus:border-[#9aaa91] focus:ring-4 focus:ring-[#e8eee4] sm:text-base"
+              className="diary-textarea w-full resize-y rounded-2xl border px-4 py-4 text-sm leading-7 text-stone-700 outline-none transition placeholder:text-stone-400 focus:ring-4 sm:text-base"
             />
             {validationMessage && (
               <p id="diary-validation" className="mt-2 text-sm text-rose-600" role="alert">
                 {validationMessage}
               </p>
             )}
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-stone-500">
-                선택한 감정 <span className="ml-1">{selectedEmotion.emoji} {selectedEmotion.label}</span>
+            <div className="diary-form-footer mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="diary-selected-emotion text-sm text-stone-500">
+                오늘의 기분 <span className="ml-1">{selectedEmotion.emoji} {selectedEmotion.label}</span>
               </p>
               <button
                 type="submit"
                 disabled={isSaving || Boolean(supabaseConfigurationError)}
-                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#71816b] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#5e6e58] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#71816b] disabled:cursor-not-allowed disabled:opacity-60"
+                className="diary-save-button inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSaving ? '저장 중...' : '일기 저장하기'}
-                {!isSaving && <span aria-hidden="true">→</span>}
+                {isSaving ? '저장 중...' : '오늘의 일기 간직하기'}
+                {!isSaving && <span aria-hidden="true">✿</span>}
               </button>
             </div>
           </form>
         </section>
 
-        <section aria-labelledby="diary-list-heading">
-          <div className="mb-5 flex items-center justify-between gap-3">
+        <section className="diary-records" aria-labelledby="diary-list-heading">
+          <div className="diary-records-heading mb-5 flex items-center justify-between gap-3">
             <div>
+              <p className="diary-kicker">LITTLE MOMENTS, KEPT FOREVER</p>
               <h2 id="diary-list-heading" className="text-xl font-semibold text-stone-800">
-                나의 기록
+                차곡차곡 쌓인 기록 <span className="diary-count">{diaries.length}</span>
               </h2>
-              <p className="mt-1 text-sm text-stone-500">차곡차곡 쌓이는 오늘의 마음</p>
+              <p className="mt-1 text-sm text-stone-500">한 장씩 모아보는 나의 하루들</p>
             </div>
             <button
               type="button"
               onClick={loadDiaries}
               disabled={isLoading}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-[#71816b] transition hover:bg-[#e8eee4] disabled:cursor-wait disabled:opacity-60"
+              className="diary-refresh rounded-lg px-3 py-2 text-sm font-medium transition disabled:cursor-wait disabled:opacity-60"
             >
-              다시 불러오기
+              ↻ <span>새로고침</span>
             </button>
           </div>
 
@@ -317,12 +338,12 @@ function App() {
                 return (
                   <li
                     key={diary.id}
-                    className="rounded-3xl border border-stone-200/80 bg-white p-5 shadow-[0_8px_30px_-24px_rgba(54,63,46,0.35)] sm:p-6"
+                    className="diary-entry rounded-3xl p-5 sm:p-6"
                   >
                     <div className="mb-4 flex items-start justify-between gap-4">
                       <div className="flex min-w-0 items-center gap-3">
                         <span
-                          className={`flex size-11 shrink-0 items-center justify-center rounded-2xl text-xl ${
+                          className={`diary-entry-emotion flex size-11 shrink-0 items-center justify-center rounded-2xl text-xl ${
                             diaryEmotion?.color ?? 'bg-stone-100 text-stone-600'
                           }`}
                           aria-label={diaryEmotion?.label ?? '감정'}
@@ -346,7 +367,7 @@ function App() {
                         onClick={() => handleDelete(diary.id)}
                         disabled={deletingId !== null || Boolean(supabaseConfigurationError)}
                         aria-label={`${formatCreatedAt(diary.created_at)} 일기 삭제`}
-                        className="shrink-0 rounded-lg px-3 py-2 text-sm text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="diary-delete shrink-0 rounded-lg px-3 py-2 text-sm transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-400 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {deletingId === diary.id ? '삭제 중...' : '삭제'}
                       </button>
@@ -361,8 +382,8 @@ function App() {
           )}
         </section>
 
-        <footer className="py-10 text-center text-xs text-stone-400">
-          오늘의 마음도 소중한 나의 일부예요.
+        <footer className="diary-footer py-10 text-center text-xs">
+          <span aria-hidden="true">♡</span> 오늘의 마음도 소중한 나의 한 페이지예요 <span aria-hidden="true">♡</span>
         </footer>
       </div>
     </main>
