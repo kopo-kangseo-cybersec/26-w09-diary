@@ -77,8 +77,8 @@ Supabase의 `diaries` 테이블에 저장됩니다.
 
 ## 실행 및 배포 링크
 
-- Netlify 배포 URL: (배포 후 입력)
-- GitHub Pages 배포 URL: (배포 후 입력)
+- Netlify 배포 URL: https://tw-diary.netlify.app/
+- GitHub Pages 배포 URL: https://leetaewon.com/26-w09-diary/
 
 ## 커스터마이징한 부분
 
