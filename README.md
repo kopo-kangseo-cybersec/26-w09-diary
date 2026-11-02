@@ -68,3 +68,7 @@ npm run build
 - **환경변수 안내가 나타남:** `.env.local`의 변수명과 Supabase URL·publishable key를 확인하고 개발 서버를 다시 시작하세요.
 - **테이블 권한 오류:** Supabase에서 `diaries` 테이블의 RLS 정책과 `anon` 역할의 권한을 확인하세요.
 - **배포 후 설정이 반영되지 않음:** 호스팅 환경변수를 확인한 다음 새 빌드를 배포하세요.
+
+## 실행 및 배포 링크
+- github : https://taeyoon-hack.github.io/26-w09-diary/
+- netlify : https://ty-diary.netlify.app/
