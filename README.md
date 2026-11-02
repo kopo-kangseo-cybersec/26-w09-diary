@@ -5,18 +5,15 @@
 
 ## 소개
 
-<!-- 이 감정 일기가 무엇인지, 어떤 기능이 있는지 간단히 소개해주세요 -->
+Supabase에 기록을 저장하는 반응형 감정 일기장입니다. 감정을 선택해 일기를 작성하고, 최신순 목록과 감정별 필터로 기록을 다시 볼 수 있습니다.
 
 ## 어떻게 만들었나요
 
-<!-- 어떤 도구(Copilot Plan 모드 → Agent)로, 어떤 순서로 만들었는지 흐름을 설명해주세요 -->
+Vite + React와 Tailwind CSS로 화면을 구성하고, Supabase JavaScript 클라이언트로 기본 CRUD를 연결했습니다. Realtime 구독 없이 작성·삭제 후 목록을 다시 조회합니다.
 
 ## 데이터는 어디에 저장되나요
 
-<!--
-diaries 테이블의 구조(컬럼)와, 8주차 To-Do(localStorage)와 무엇이 달라졌는지 정리해주세요.
-- 다른 기기(스마트폰 등)나 다른 브라우저에서 열었을 때 어떻게 되나요?
--->
+`diaries` 테이블의 `id`, `content`, `emotion`, `created_at` 컬럼을 사용합니다. 브라우저 `localStorage`가 아니라 Supabase에 저장하므로 같은 프로젝트 환경의 다른 기기와 브라우저에서도 동일한 기록을 확인할 수 있습니다.
 
 ## 보안에서 확인한 것 (사이버보안과 체크포인트)
 
@@ -28,8 +25,8 @@ diaries 테이블의 구조(컬럼)와, 8주차 To-Do(localStorage)와 무엇이
 
 ## 실행 및 배포 링크
 
-- Netlify 배포 URL: 
-- GitHub Pages 배포 URL: 
+- Netlify 배포 URL:
+- GitHub Pages 배포 URL:
 
 ## 커스터마이징한 부분
 
