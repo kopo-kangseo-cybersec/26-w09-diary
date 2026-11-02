@@ -3,11 +3,36 @@ import { getSupabaseClient } from '../lib/supabase.js'
 const diaryColumns = 'id, content, emotion, created_at'
 const allowedEmotions = new Set(['joy', 'calm', 'sad', 'angry', 'anxious'])
 
+function throwDiaryReadError(step, error) {
+  const errorInfo =
+    error && typeof error === 'object'
+      ? error
+      : { message: String(error) }
+  const code =
+    'code' in errorInfo && typeof errorInfo.code === 'string'
+      ? ` [${errorInfo.code}]`
+      : ''
+  const message =
+    'message' in errorInfo && typeof errorInfo.message === 'string'
+      ? errorInfo.message
+      : '알 수 없는 오류'
+  const details =
+    'details' in errorInfo && typeof errorInfo.details === 'string'
+      ? ` (${errorInfo.details})`
+      : ''
+  const hint =
+    'hint' in errorInfo && typeof errorInfo.hint === 'string'
+      ? ` 안내: ${errorInfo.hint}`
+      : ''
+
+  throw new Error(`${step}${code}: ${message}${details}${hint}`)
+}
+
 export async function getDiaries() {
   const supabase = getSupabaseClient()
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
-  if (userError) throw userError
+  if (userError) throwDiaryReadError('로그인 확인 실패', userError)
   if (!userData.user) throw new Error('일기를 보려면 먼저 로그인해 주세요.')
 
   const { data: profile, error: profileError } = await supabase
@@ -16,7 +41,7 @@ export async function getDiaries() {
     .eq('id', userData.user.id)
     .single()
 
-  if (profileError) throw profileError
+  if (profileError) throwDiaryReadError('계정 권한 확인 실패', profileError)
 
   const isAdmin = profile.role === 'admin'
   const { data, error } = isAdmin
@@ -26,7 +51,12 @@ export async function getDiaries() {
         .select(diaryColumns)
         .order('created_at', { ascending: false })
 
-  if (error) throw error
+  if (error) {
+    throwDiaryReadError(
+      isAdmin ? '관리자 일기/작성자 이메일 조회 실패' : '내 일기 조회 실패',
+      error,
+    )
+  }
   return { diaries: data, isAdmin }
 }
 

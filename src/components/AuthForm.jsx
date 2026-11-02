@@ -1,6 +1,16 @@
 import { useState } from 'react'
 import { signIn, signUp } from '../api/auth.js'
 
+function getAuthErrorMessage(error) {
+  if (error instanceof Error && /email rate limit exceeded/i.test(error.message)) {
+    return '인증 이메일 발송 한도를 초과했습니다. 받은편지함과 스팸함을 먼저 확인하고, 잠시 후 다시 시도해 주세요. 계속 발생하면 Supabase에서 SMTP 설정을 확인해 주세요.'
+  }
+
+  return error instanceof Error
+    ? error.message
+    : '계정 요청을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.'
+}
+
 function AuthForm() {
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState('')
@@ -28,11 +38,7 @@ function AuthForm() {
       }
       setPassword('')
     } catch (authError) {
-      setError(
-        authError instanceof Error
-          ? authError.message
-          : '계정 요청을 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.',
-      )
+      setError(getAuthErrorMessage(authError))
     } finally {
       setIsSubmitting(false)
     }
@@ -71,11 +77,17 @@ function AuthForm() {
             id="account-email"
             type="email"
             autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            placeholder="name@example.com"
             required
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => setEmail(event.target.value.trim())}
             className="retro-textarea w-full rounded-xl border border-stone-200 bg-[#fdfcf9] px-4 py-3 text-sm outline-none focus:border-emerald-700 focus:ring-4 focus:ring-emerald-700/10"
           />
+          <p className="retro-hint mt-2 text-xs">
+            name@example.com 형식으로 입력해 주세요. 앞뒤 공백은 자동으로 제거됩니다.
+          </p>
         </div>
         <div>
           <label htmlFor="account-password" className="mb-2 block text-sm font-semibold">
