@@ -1,1 +1,223 @@
 @import "tailwindcss";
+
+.diary-shell {
+  background-color: #fffaf5;
+  background-image:
+    radial-gradient(#e9c9a8 0.7px, transparent 0.7px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5), transparent 40%, rgba(245, 220, 194, 0.18));
+  background-size: 18px 18px, 100% 100%;
+}
+
+.diary-page {
+  position: relative;
+}
+
+.diary-page::before,
+.diary-page::after {
+  position: absolute;
+  z-index: 0;
+  color: #e8ba91;
+  font-size: 1.5rem;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.diary-page::before {
+  content: "✿";
+  top: 3rem;
+  left: -2.5rem;
+  transform: rotate(-15deg);
+}
+
+.diary-page::after {
+  content: "♡";
+  top: 8rem;
+  right: -2rem;
+  transform: rotate(12deg);
+}
+
+.diary-header,
+.diary-card,
+.diary-section-title,
+.filter-tabs,
+.empty-note {
+  position: relative;
+  z-index: 1;
+}
+
+.diary-title,
+.diary-entry-content {
+  font-family: "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive;
+}
+
+.diary-title {
+  letter-spacing: -0.06em;
+}
+
+.diary-sticker {
+  align-items: center;
+  justify-content: center;
+  width: 4.25rem;
+  height: 4.25rem;
+  border: 5px solid #fff;
+  border-radius: 48% 52% 45% 55%;
+  background: #d7edcf;
+  box-shadow: 0 5px 0 #b5d5a8, 0 10px 20px rgba(114, 139, 94, 0.15);
+  transform: rotate(-8deg);
+}
+
+.diary-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #d7a375;
+}
+
+.diary-divider::before,
+.diary-divider::after {
+  display: block;
+  height: 1px;
+  flex: 1;
+  content: "";
+  background: #e9c9a8;
+}
+
+.diary-card {
+  box-shadow: 0 15px 35px rgba(120, 72, 30, 0.09);
+}
+
+.diary-card--new {
+  border-color: #efd9bf;
+  background-color: #fffdf9;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 2.15rem,
+    rgba(218, 180, 145, 0.16) 2.2rem
+  );
+}
+
+.tape {
+  position: absolute;
+  width: 5rem;
+  height: 1.5rem;
+  background: rgba(246, 205, 137, 0.7);
+  box-shadow: 0 1px 3px rgba(164, 117, 55, 0.08);
+}
+
+.tape--top {
+  top: -0.7rem;
+  left: calc(50% - 2.5rem);
+  transform: rotate(-2deg);
+}
+
+.diary-kicker {
+  color: #ba8056;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.date-stamp {
+  border: 1px dashed #dba77d;
+  border-radius: 0.5rem;
+  color: #b9764e;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.5rem;
+  transform: rotate(3deg);
+}
+
+.emotion-button {
+  border-color: #f0dfcc;
+  background: rgba(255, 251, 244, 0.75);
+}
+
+.emotion-button:hover {
+  transform: translateY(-2px) rotate(-1deg);
+}
+
+.diary-textarea {
+  min-height: 9.5rem;
+  border-radius: 1rem;
+  background: rgba(255, 252, 247, 0.84);
+  box-shadow: inset 0 0 0 1px rgba(232, 199, 168, 0.65);
+}
+
+.diary-textarea:focus {
+  box-shadow: inset 0 0 0 2px #e6b37e, 0 0 0 4px rgba(244, 205, 164, 0.25);
+}
+
+.save-button {
+  background: #6f8e63;
+  box-shadow: 0 4px 0 #56714d;
+}
+
+.save-button:hover {
+  background: #5d7d53;
+  transform: translateY(1px);
+  box-shadow: 0 3px 0 #4d6745;
+}
+
+.filter-tabs {
+  border: 1px solid #efdcc8;
+  background: rgba(255, 253, 249, 0.85);
+  box-shadow: 0 5px 15px rgba(120, 72, 30, 0.05);
+}
+
+.filter-tab--active {
+  background: #ba8056;
+  box-shadow: 0 2px 0 #976443;
+}
+
+.empty-note {
+  border-color: #e8ccb0;
+  background: rgba(255, 253, 249, 0.72);
+}
+
+.diary-card--entry {
+  border-color: #efddc9;
+  box-shadow: 3px 4px 0 rgba(230, 190, 151, 0.35), 0 12px 25px rgba(120, 72, 30, 0.06);
+}
+
+.diary-card--entry:nth-child(even) {
+  transform: rotate(0.35deg);
+}
+
+.diary-card--entry:nth-child(odd) {
+  transform: rotate(-0.25deg);
+}
+
+.entry-corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-top: 1.7rem solid #f8e5ce;
+  border-left: 1.7rem solid transparent;
+  border-radius: 0 1.35rem 0 0;
+}
+
+.emotion-badge {
+  background: #fff1dc;
+  box-shadow: 0 3px 0 #f1d0a8;
+}
+
+.diary-entry-content {
+  color: #625448;
+  font-size: 1rem;
+}
+
+@media (max-width: 640px) {
+  .diary-page::before,
+  .diary-page::after {
+    display: none;
+  }
+
+  .diary-card--entry:nth-child(even),
+  .diary-card--entry:nth-child(odd) {
+    transform: none;
+  }
+}

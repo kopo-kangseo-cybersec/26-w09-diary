@@ -30,6 +30,12 @@ function App() {
   const [isSaving, setIsSaving] = useState(false)
   const [deletingId, setDeletingId] = useState(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [todayLabel] = useState(() =>
+    new Intl.DateTimeFormat('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+    }).format(new Date()),
+  )
 
   const loadDiaries = useCallback(async ({ showLoading = true } = {}) => {
     if (showLoading) {
@@ -100,29 +106,44 @@ function App() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fffaf5] px-4 py-8 text-stone-800 sm:px-6 sm:py-12">
-      <div className="mx-auto max-w-3xl">
-        <header className="mb-8 text-center sm:mb-10">
-          <div className="mb-4 text-4xl" aria-hidden="true">
+    <main className="diary-shell min-h-screen px-4 py-8 text-stone-800 sm:px-6 sm:py-12">
+      <div className="diary-page mx-auto max-w-3xl">
+        <header className="diary-header mb-8 text-center sm:mb-10">
+          <div className="diary-sticker mb-4 inline-flex text-4xl" aria-hidden="true">
             🌿
           </div>
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">
-            My daily journal
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.3em] text-amber-700">
+            My little journal
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+          <h1 className="diary-title text-3xl font-bold tracking-tight text-stone-900 sm:text-5xl">
             오늘의 감정 일기
           </h1>
           <p className="mt-3 text-sm text-stone-500 sm:text-base">
             잠시 멈추고, 지금 마음을 천천히 들여다보세요.
           </p>
+          <div className="diary-divider mt-6" aria-hidden="true">
+            <span>✦</span>
+          </div>
         </header>
 
-        <section className="rounded-3xl border border-orange-100 bg-white p-5 shadow-[0_12px_40px_rgba(120,72,30,0.08)] sm:p-8">
+        <section className="diary-card diary-card--new relative rounded-3xl border bg-white p-5 sm:p-8">
+          <span className="tape tape--top" aria-hidden="true" />
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="diary-kicker">Dear me,</p>
+              <h2 className="mt-1 text-xl font-bold text-stone-900">
+                오늘의 마음을 남겨요
+              </h2>
+            </div>
+            <span className="date-stamp" aria-hidden="true">
+              {todayLabel}
+            </span>
+          </div>
           <form onSubmit={handleSubmit}>
             <div className="mb-6">
-              <h2 className="mb-3 text-lg font-bold text-stone-900">
+              <h3 className="mb-3 text-sm font-bold text-stone-700">
                 지금 어떤 기분인가요?
-              </h2>
+              </h3>
               <div className="grid grid-cols-5 gap-2 sm:gap-3">
                 {emotions.map((emotion) => (
                   <button
@@ -130,7 +151,7 @@ function App() {
                     type="button"
                     aria-pressed={selectedEmotion === emotion.value}
                     onClick={() => setSelectedEmotion(emotion.value)}
-                    className={`rounded-2xl border px-1 py-3 text-center transition ${
+                    className={`emotion-button rounded-2xl border px-1 py-3 text-center transition ${
                       selectedEmotion === emotion.value
                         ? 'border-amber-400 bg-amber-50 text-amber-800 shadow-sm'
                         : 'border-stone-100 bg-stone-50 text-stone-500 hover:border-amber-200 hover:bg-amber-50/50'
@@ -156,12 +177,12 @@ function App() {
               onChange={(event) => setContent(event.target.value)}
               placeholder="오늘 하루는 어땠나요? 자유롭게 적어보세요."
               rows="5"
-              className="w-full resize-none rounded-2xl border border-stone-200 bg-stone-50/70 p-4 text-sm leading-7 outline-none transition placeholder:text-stone-400 focus:border-amber-400 focus:bg-white focus:ring-4 focus:ring-amber-100"
+              className="diary-textarea w-full resize-none border-0 p-4 text-sm leading-7 outline-none transition placeholder:text-stone-400 focus:ring-0"
             />
             <button
               type="submit"
               disabled={isSaving}
-              className="mt-4 w-full rounded-2xl bg-stone-900 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-stone-700 disabled:cursor-not-allowed disabled:bg-stone-300"
+              className="save-button mt-4 w-full rounded-2xl px-5 py-3.5 text-sm font-bold text-white transition disabled:cursor-not-allowed disabled:bg-stone-300"
             >
               {isSaving ? '저장 중...' : '일기 저장하기'}
             </button>
@@ -185,20 +206,20 @@ function App() {
           </div>
         )}
 
-        <section className="mt-10">
+        <section className="mt-12">
           <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-sm font-semibold text-amber-700">Your memories</p>
-              <h2 className="mt-1 text-2xl font-bold text-stone-900">나의 기록</h2>
+              <p className="diary-kicker">Little memories</p>
+              <h2 className="diary-section-title mt-1 text-2xl font-bold text-stone-900">나의 기록</h2>
             </div>
-            <div className="flex gap-1 overflow-x-auto rounded-xl bg-white p-1 shadow-sm ring-1 ring-stone-100">
+            <div className="filter-tabs flex gap-1 overflow-x-auto rounded-xl p-1">
               <button
                 type="button"
                 onClick={() => setActiveFilter('all')}
                 className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition ${
                   activeFilter === 'all'
-                    ? 'bg-stone-900 text-white'
-                    : 'text-stone-500 hover:bg-stone-50'
+                    ? 'filter-tab--active text-white'
+                    : 'text-stone-500 hover:bg-amber-50'
                 }`}
               >
                 전체
@@ -210,8 +231,8 @@ function App() {
                   onClick={() => setActiveFilter(emotion.value)}
                   className={`whitespace-nowrap rounded-lg px-3 py-2 text-xs font-semibold transition ${
                     activeFilter === emotion.value
-                      ? 'bg-stone-900 text-white'
-                      : 'text-stone-500 hover:bg-stone-50'
+                      ? 'filter-tab--active text-white'
+                      : 'text-stone-500 hover:bg-amber-50'
                   }`}
                 >
                   {emotion.emoji} {emotion.label}
@@ -221,14 +242,14 @@ function App() {
           </div>
 
           {isLoading ? (
-            <div className="rounded-3xl border border-dashed border-stone-200 bg-white/70 px-6 py-14 text-center text-sm text-stone-500">
+            <div className="empty-note rounded-3xl border border-dashed px-6 py-14 text-center text-sm text-stone-500">
               <span className="mb-3 inline-block animate-pulse text-3xl" aria-hidden="true">
                 ✨
               </span>
               <p>소중한 기록을 불러오는 중...</p>
             </div>
           ) : filteredDiaries.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-stone-200 bg-white/70 px-6 py-14 text-center">
+            <div className="empty-note rounded-3xl border border-dashed px-6 py-14 text-center">
               <p className="text-3xl" aria-hidden="true">
                 {diaries.length === 0 ? '🌱' : '🫧'}
               </p>
@@ -250,12 +271,13 @@ function App() {
                 return (
                   <article
                     key={diary.id}
-                    className="rounded-3xl border border-orange-100/80 bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6"
+                    className="diary-card diary-card--entry relative rounded-3xl border bg-white p-5 transition hover:shadow-md sm:p-6"
                   >
+                    <span className="entry-corner" aria-hidden="true" />
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-3">
                         <span
-                          className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-50 text-2xl"
+                          className="emotion-badge flex h-11 w-11 items-center justify-center rounded-2xl text-2xl"
                           aria-label={emotion.label}
                         >
                           {emotion.emoji}
@@ -274,12 +296,12 @@ function App() {
                         type="button"
                         onClick={() => handleDelete(diary)}
                         disabled={deletingId === diary.id}
-                        className="rounded-lg px-2 py-1 text-xs text-stone-400 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-wait disabled:opacity-50"
+                        className="delete-button rounded-lg px-2 py-1 text-xs text-stone-400 transition hover:bg-red-50 hover:text-red-500 disabled:cursor-wait disabled:opacity-50"
                       >
                         {deletingId === diary.id ? '삭제 중...' : '삭제'}
                       </button>
                     </div>
-                    <p className="mt-5 whitespace-pre-wrap break-words text-sm leading-7 text-stone-600">
+                    <p className="diary-entry-content mt-5 whitespace-pre-wrap break-words text-sm leading-7 text-stone-600">
                       {diary.content}
                     </p>
                   </article>
