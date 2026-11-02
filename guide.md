@@ -126,39 +126,24 @@ main              (원본 보관 — 절대 merge하지 않습니다)
 6. **Create new project** 클릭 → 프로젝트가 준비될 때까지 1~2분 기다립니다.
 
 ### 3-2. SQL로 테이블 및 보안 정책 생성
-왼쪽 메뉴 **SQL Editor** 클릭 → **New query**에 아래 SQL 전체를 복사해 붙여넣고 **Run**(실행)을 누릅니다:
+저장소의 `supabase/migrations/20261102000000_diary_account_security.sql`을 실행한 뒤 `supabase/migrations/20261102000100_admin_diary_emails.sql`도 차례대로 실행합니다. 첫 번째 스크립트는 일기 소유자(`user_id`), 계정 역할(`profiles`), 신규 가입 프로필 자동 생성, 권한, RLS 정책을 설정하고 기존의 공개 정책을 제거합니다. 두 번째 스크립트는 관리자 전용 일기/이메일 조회 함수를 추가합니다. 첫 번째 보안 스크립트를 이미 실행했다면 두 번째 파일만 실행하세요. 과거에 익명으로 작성된 일기는 소유자가 없어 일반 사용자에게 노출되지 않습니다.
+
+왼쪽 메뉴 **Table Editor**에서 `diaries.user_id`와 `profiles.role`이 생성됐는지 확인합니다. 가입 직후 계정은 기본적으로 `user` 역할입니다. 관리자를 지정하려면 먼저 앱에서 해당 이메일로 가입한 뒤 SQL Editor에서 아래 쿼리를 실행하고 이메일을 바꿉니다:
 
 ```sql
--- 1) 감정 일기 테이블 생성 (데이터 정의)
-create table public.diaries (
-  id bigint primary key generated always as identity,
-  content text not null,
-  emotion text not null check (emotion in ('joy', 'calm', 'sad', 'angry', 'anxious')),
-  created_at timestamptz not null default now()
+update public.profiles
+set role = 'admin'
+where id = (
+  select id from auth.users where email = 'admin@example.com'
 );
-
--- 2) 브라우저(anon 역할) 접근 권한 부여
-grant select, insert, delete on public.diaries to anon;
-
--- 3) 행 단위 보안(RLS) 활성화
-alter table public.diaries enable row level security;
-
--- 4) RLS 정책: 누구나 읽기 / 쓰기 / 삭제 허용 (실습용 정책)
-create policy "anyone can read" on public.diaries
-  for select to anon using (true);
-
-create policy "anyone can insert" on public.diaries
-  for insert to anon with check (true);
-
-create policy "anyone can delete" on public.diaries
-  for delete to anon using (true);
 ```
 
-왼쪽 메뉴 **Table Editor**를 눌러 `diaries` 테이블과 4개 컬럼(`id`, `content`, `emotion`, `created_at`)이 정상 생성되었는지 확인합니다.
+`profiles.role`은 브라우저에서 수정할 수 없습니다. 관리자 권한은 Supabase SQL Editor에서만 부여하세요. 기존 계정도 스크립트 실행 시 프로필이 생성됩니다.
 
 > 🔍 **[보안 체크포인트 1]**
-> - `emotion` 컬럼에 지정된 `check (emotion in (...))`은 왜 필요할까요?
-> - `grant`와 `create policy (RLS)`는 각각 무엇을 막고 무엇을 허용하나요?
+> - `emotion`의 `check` 제약은 왜 필요할까요?
+> - 일반 계정의 정책에서 `auth.uid() = user_id`를 확인하는 이유는 무엇일까요?
+> - `grant` 권한과 RLS 정책은 각각 어떤 접근을 제한할까요?
 
 ---
 
@@ -203,13 +188,16 @@ create policy "anyone can delete" on public.diaries
 ## 1. 목표
 하루의 감정과 생각을 기록하고, PC와 스마트폰 등 어느 기기에서 열어도 동일한 기록을 확인할 수 있는 감정 일기장 (새로고침/재조회 기반 기본 CRUD 연동, Realtime 웹소켓 기능은 제외)
 
-## 2. 데이터 정의 (Supabase `diaries` 테이블 사용 — 이미 DB에 생성되어 있음)
+## 2. 데이터 정의 (Supabase `diaries` 테이블 — 3-2단계 마이그레이션으로 생성)
 - id: bigint, 자동 생성
+- user_id: uuid, 인증 사용자 ID (DB에서 auth.uid() 기본값으로 설정)
 - content: text, 일기 본문 (필수)
 - emotion: text, 감정 구분 ('joy' | 'calm' | 'sad' | 'angry' | 'anxious' 중 하나)
 - created_at: timestamptz, 작성 일시 (DB 기본값)
 
 ## 3. 화면 및 기능 요구사항
+- 로그인/계정 만들기/로그아웃을 제공하고, 로그인 전에는 일기 화면을 표시하지 않음
+- 개인 계정에는 자기 일기만 표시하고, 관리자 권한은 DB RLS 정책이 결정함
 - 작성 영역:
   - 감정 선택 버튼 5개 (😊 기쁨=joy, 😌 평온=calm, 😢 슬픔=sad, 😠 화남=angry, 😰 불안=anxious)
   - 내용 입력창(textarea/input) + 저장 버튼
@@ -283,8 +271,12 @@ create policy "anyone can delete" on public.diaries
 >    → 키가 GitHub 저장소(코드 커밋 기록)에 영구 박제되는 것을 막고, 개발/배포 환경에 따라 다른 값을 유연하게 주입하기 위함입니다.
 > 3. 키가 공개된다면 데이터는 무엇이 지켜주나요?
 >    → 데이터베이스의 **권한(`grant`)과 행 단위 보안(`RLS`)** 정책이 지켜줍니다.
-> 4. 지금 우리가 설정한 정책(`using (true)`)의 취약점은 무엇인가요?
->    → 누구나 API 키만 알면 다른 사람의 일기까지 모두 읽고 마음대로 삭제할 수 있습니다. (실제 서비스에서는 로그인 인증과 `auth.uid() = user_id` 검증이 필수입니다.)
+> 4. 개인 계정과 관리자 계정의 읽기 범위는 무엇으로 구분되나요?
+>    → DB RLS가 `auth.uid() = user_id`를 확인하고, `profiles.role = 'admin'`이면 전체 일기를 허용합니다. 브라우저의 Publishable Key만으로 이 정책을 우회할 수 없습니다.
+> 5. 일기 API에 SQL 문자열 이어 붙이기가 있나요?
+>    → Supabase 쿼리 빌더가 값 전달을 처리하며, 사용자 입력을 SQL 구문으로 실행하지 않습니다.
+
+두 개의 일반 계정을 만들어 각각 일기를 작성한 뒤, 다른 계정으로 로그인해 상대방 일기가 보이지 않는지 확인합니다. 관리자 계정은 SQL Editor에서 승격한 후 전체 일기를 볼 수 있는지 확인합니다.
 
 ---
 
@@ -362,17 +354,20 @@ Netlify는 GitHub 저장소에 코드가 올라오면, Netlify 클라우드 서�
 
 ## 9단계 — 오늘의 핵심 하이라이트: Netlify ↔ GitHub Pages ↔ 스마트폰 삼각 동기화!
 
-서로 완전히 다른 3개의 환경이 하나의 중앙 데이터베이스(Supabase)를 통해 실시간으로 이어지는 마법을 확인합니다.
+서로 다른 기기와 배포 환경이 하나의 중앙 데이터베이스(Supabase)에 연결되는 것을 확인합니다. 로그인한 계정에 따라 보이는 일기는 다릅니다.
 
 1. 컴퓨터 브라우저에 **Netlify 배포 사이트**와 **GitHub Pages 배포 사이트**를 나란히 두 창으로 띄웁니다.
 2. **스마트폰 브라우저**로도 둘 중 하나의 주소에 접속합니다.
-3. **[테스트 1: Netlify에서 쓰고 GitHub Pages에서 보기]**:
-   - **Netlify 사이트**에서 감정 일기를 하나 작성해 보세요.
-   - **GitHub Pages 사이트**를 새로고침해 보세요. Netlify에서 쓴 글이 그대로 나타납니다!
-4. **[테스트 2: 스마트폰에서 쓰고 PC에서 보기]**:
-   - 이번에는 **스마트폰**에서 새 일기를 작성해 보세요.
+3. **[테스트 1: 같은 계정으로 기기 간 동기화]**:
+   - Netlify와 GitHub Pages 사이트에 **같은 계정**으로 로그인합니다.
+   - 한쪽에서 작성한 일기를 다른 사이트에서 새로고침해 확인합니다.
+4. **[테스트 2: 계정별 분리]**:
+   - 두 번째 일반 계정을 만들어 다른 배포 사이트에 로그인합니다.
+   - 첫 계정의 일기가 보이지 않는지 확인합니다.
+5. **[테스트 3: 스마트폰에서 쓰고 PC에서 보기]**:
+   - 스마트폰에서도 같은 계정으로 로그인하고 일기를 작성합니다.
    - 컴퓨터의 두 사이트를 새로고침해 보세요. 스마트폰에서 쓴 글이 두 사이트 모두에 동시에 나타납니다!
-5. **[테스트 3: 한 곳에서 삭제하고 다른 곳 확인하기]**:
+6. **[테스트 4: 한 곳에서 삭제하고 다른 곳 확인하기]**:
    - GitHub Pages 사이트에서 일기 하나를 삭제해 보세요.
    - Netlify 사이트를 새로고침하면 삭제가 반영되어 사라집니다!
 
@@ -432,7 +427,7 @@ Codespaces를 삭제했더라도 당황하지 마세요! 소스 코드는 GitHub
 - **Netlify 배포 후 화면이 하얗게 나오거나 데이터가 안 불러와진다**:
   → Netlify 대시보드의 **Site configuration → Environment variables**에 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_PUBLISHABLE_KEY`가 오타 없이 들어갔는지 확인하세요. 등록 후 반드시 **Deploys → Trigger deploy → Clear cache and deploy site**를 눌러 재빌드해야 합니다.
 - **`permission denied for table diaries` 오류가 발생한다**:
-  → 3-2단계 SQL의 `grant select, insert, delete on public.diaries to anon;` 구문이 실행되지 않았습니다. Supabase SQL Editor에서 다시 실행하세요.
+  → 보안 마이그레이션을 실행했는지, Supabase Auth에서 로그인했는지 확인하세요. 기존의 anon 권한 SQL을 실행하지 마세요.
 - **일기를 저장하려는데 `new row violates check constraint` 에러가 발생한다**:
   → 테이블 정의 시 지정한 5가지 감정(`joy`, `calm`, `sad`, `angry`, `anxious`) 외의 다른 값이 전송되고 있습니다. `src/api/diaries.js`나 컴포넌트의 감정 value 값을 확인하세요.
 - **GitHub Pages 배포 후 빈 화면만 나온다**:

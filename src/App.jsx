@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { signOut } from './api/auth.js'
 import { createDiary, deleteDiary, getDiaries } from './api/diaries.js'
+import AuthForm from './components/AuthForm.jsx'
 import PixelEmotion from './components/PixelEmotion.jsx'
+import { getSupabaseClient } from './lib/supabase.js'
 import './retro.css'
 
 const emotions = [
@@ -32,6 +35,10 @@ const taskbarTime = new Intl.DateTimeFormat('ko-KR', {
 }).format(new Date())
 
 function App() {
+  const [user, setUser] = useState(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
+  const [authError, setAuthError] = useState('')
   const [diaries, setDiaries] = useState([])
   const [selectedEmotion, setSelectedEmotion] = useState('joy')
   const [activeFilter, setActiveFilter] = useState('all')
@@ -48,6 +55,8 @@ function App() {
   const listWindowRef = useRef(null)
   const diaryInputRef = useRef(null)
   const dragStateRef = useRef(null)
+  const userRef = useRef(null)
+  const diaryRequestRef = useRef(0)
 
   const distressedDiaryCount = useMemo(
     () => diaries.filter((diary) => ['angry', 'anxious'].includes(diary.emotion)).length,
@@ -65,6 +74,59 @@ function App() {
   const showBlueScreen =
     distressedDiaryCount >= 5 &&
     blueScreenDismissedFor !== distressedDiarySignature
+
+  useEffect(() => {
+    let isMounted = true
+    let subscription
+
+    const applySession = (session) => {
+      const nextUser = session?.user ?? null
+      if (userRef.current?.id !== nextUser?.id) {
+        userRef.current = nextUser
+        diaryRequestRef.current += 1
+        setDiaries([])
+        setIsAdmin(false)
+        setError('')
+        setIsLoading(Boolean(nextUser))
+        setBlueScreenDismissedFor(null)
+      }
+      setUser(nextUser)
+      setAuthError('')
+      setIsAuthLoading(false)
+    }
+
+    Promise.resolve()
+      .then(() => {
+        if (!isMounted) return null
+
+        const supabase = getSupabaseClient()
+        const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+          if (isMounted) applySession(session)
+        })
+        subscription = data.subscription
+        return supabase.auth.getSession()
+      })
+      .then((sessionState) => {
+        if (!isMounted || !sessionState) return
+        const { data: sessionData, error: sessionError } = sessionState
+        if (sessionError) throw sessionError
+        applySession(sessionData.session)
+      })
+      .catch((sessionError) => {
+        if (!isMounted) return
+        setAuthError(
+          sessionError instanceof Error
+            ? sessionError.message
+            : '계정 정보를 확인하지 못했습니다. 다시 시도해 주세요.',
+        )
+        setIsAuthLoading(false)
+      })
+
+    return () => {
+      isMounted = false
+      subscription?.unsubscribe()
+    }
+  }, [])
 
   useEffect(() => {
     if (!showBlueScreen) return undefined
@@ -126,33 +188,65 @@ function App() {
   }
 
   const loadDiaries = useCallback(async (showLoading = false) => {
+    const userId = user?.id
+    if (!userId) return
+
+    const requestId = ++diaryRequestRef.current
     if (showLoading) {
       setIsLoading(true)
       setError('')
     }
 
     try {
-      setDiaries(await getDiaries())
+      const { diaries: loadedDiaries, isAdmin: loadedAsAdmin } = await getDiaries()
+      if (requestId === diaryRequestRef.current && userRef.current?.id === userId) {
+        setDiaries(loadedDiaries)
+        setIsAdmin(loadedAsAdmin)
+        setError('')
+      }
     } catch (loadError) {
-      setError(
-        loadError instanceof Error
-          ? loadError.message
-          : '일기를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
-      )
+      if (requestId === diaryRequestRef.current && userRef.current?.id === userId) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : '일기를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.',
+        )
+      }
     } finally {
-      setIsLoading(false)
+      if (requestId === diaryRequestRef.current && userRef.current?.id === userId) {
+        setIsLoading(false)
+      }
     }
-  }, [])
+  }, [user?.id])
 
   useEffect(() => {
-    let isMounted = true
+    const userId = user?.id
+    if (!userId) {
+      diaryRequestRef.current += 1
+      return
+    }
+
+    const requestId = ++diaryRequestRef.current
+    let isCurrent = true
 
     getDiaries()
-      .then((loadedDiaries) => {
-        if (isMounted) setDiaries(loadedDiaries)
+      .then(({ diaries: loadedDiaries, isAdmin: loadedAsAdmin }) => {
+        if (
+          isCurrent &&
+          requestId === diaryRequestRef.current &&
+          userRef.current?.id === userId
+        ) {
+          setDiaries(loadedDiaries)
+          setIsAdmin(loadedAsAdmin)
+          setError('')
+        }
       })
       .catch((loadError) => {
-        if (isMounted) {
+        if (
+          isCurrent &&
+          requestId === diaryRequestRef.current &&
+          userRef.current?.id === userId
+        ) {
           setError(
             loadError instanceof Error
               ? loadError.message
@@ -161,13 +255,19 @@ function App() {
         }
       })
       .finally(() => {
-        if (isMounted) setIsLoading(false)
+        if (
+          isCurrent &&
+          requestId === diaryRequestRef.current &&
+          userRef.current?.id === userId
+        ) {
+          setIsLoading(false)
+        }
       })
 
     return () => {
-      isMounted = false
+      isCurrent = false
     }
-  }, [])
+  }, [user?.id])
 
   const visibleDiaries = useMemo(
     () =>
@@ -222,6 +322,19 @@ function App() {
     }
   }
 
+  const handleSignOut = async () => {
+    setAuthError('')
+    try {
+      await signOut()
+    } catch (signOutError) {
+      setAuthError(
+        signOutError instanceof Error
+          ? signOutError.message
+          : '로그아웃하지 못했습니다. 다시 시도해 주세요.',
+      )
+    }
+  }
+
   return (
     <div className="retro-desktop min-h-screen">
       <header className="retro-topbar">
@@ -232,9 +345,26 @@ function App() {
             </span>
             <span className="text-lg font-bold tracking-tight">마음의 기록</span>
           </a>
-          <span className="retro-header-hint hidden text-sm sm:block">
-            감정 일기.exe
-          </span>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <span className="retro-header-hint hidden max-w-48 truncate text-sm sm:block">
+                  {isAdmin ? `관리자 · ${user.email}` : user.email}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => void handleSignOut()}
+                  className="retro-button rounded-xl border border-stone-300 bg-white/70 px-3 py-2 text-sm font-medium hover:bg-white"
+                >
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <span className="retro-header-hint hidden text-sm sm:block">
+                감정 일기.exe
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
@@ -254,6 +384,22 @@ function App() {
           </p>
         </section>
 
+        {authError && !user && (
+          <p role="alert" className="mx-auto mb-5 max-w-md rounded-xl bg-rose-50 p-4 text-sm text-rose-900">
+            {authError}
+          </p>
+        )}
+        {authError && user && (
+          <p role="alert" className="mx-auto mb-5 max-w-md rounded-xl bg-rose-50 p-4 text-sm text-rose-900">
+            {authError}
+          </p>
+        )}
+
+        {isAuthLoading ? (
+          <div className="retro-empty mx-auto grid min-h-56 max-w-md place-items-center rounded-3xl border border-stone-200 bg-white p-8 text-center" role="status">
+            <p className="text-sm">계정 정보를 확인하고 있어요...</p>
+          </div>
+        ) : user ? (
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.18fr)] lg:gap-10">
           <section
             ref={composeWindowRef}
@@ -484,6 +630,11 @@ function App() {
                       >
                         {dateTimeFormatter.format(new Date(diary.created_at))}
                       </time>
+                      {isAdmin && (
+                        <p className="retro-hint mt-2 break-all text-xs">
+                          작성자: {diary.user_email || '이메일 정보 없음'}
+                        </p>
+                      )}
                     </article>
                   )
                 })}
@@ -511,9 +662,12 @@ function App() {
             </div>
           </section>
         </div>
+        ) : (
+          <AuthForm />
+        )}
       </main>
 
-      <footer className="retro-taskbar" aria-label="작업 표시줄">
+      {user && <footer className="retro-taskbar" aria-label="작업 표시줄">
         {isStartMenuOpen && (
           <div className="retro-start-menu" role="menu" aria-label="시작 메뉴">
             <div className="retro-start-menu-banner">
@@ -565,7 +719,7 @@ function App() {
           <span aria-hidden="true">♪</span>
           <time>{taskbarTime}</time>
         </div>
-      </footer>
+      </footer>}
 
       {showBlueScreen && (
         <div className="retro-blue-screen" role="alertdialog" aria-modal="true" aria-labelledby="blue-screen-title">
