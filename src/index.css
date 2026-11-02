@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+@theme {
+  --font-hand: "Gaegu", "Jua", cursive;
+  --font-title: "Jua", "Gaegu", sans-serif;
+}
+
 body {
-  @apply bg-slate-50 text-slate-800 antialiased;
+  @apply font-hand text-xl text-stone-700 antialiased;
+  background-color: #fdf2f4;
+  background-image: radial-gradient(#f9c9d4 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+
+/* 줄 노트 배경 */
+.lined {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 31px,
+    #f3d9a4 31px,
+    #f3d9a4 32px
+  );
+  line-height: 32px;
+}
+
+/* 마스킹 테이프 */
+.tape {
+  background: repeating-linear-gradient(45deg, #ffd6e0cc 0 8px, #fff3c8cc 8px 16px);
 }

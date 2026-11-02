@@ -3,7 +3,22 @@ import { addDiary, deleteDiary, fetchDiaries } from './api/diaries'
 import { EMOTIONS, emotionOf } from './emotions'
 
 const errorText = (e) =>
-  `오류가 발생했습니다. 네트워크 연결과 Supabase 키 설정을 확인해 주세요. (${e?.message ?? e})`
+  `앗, 문제가 생겼어요. 네트워크 연결과 Supabase 키 설정을 확인해 주세요. (${e?.message ?? e})`
+
+const formatDate = (iso) => {
+  const d = new Date(iso)
+  const date = d.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short',
+  })
+  const time = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })
+  return `${date} ${time}`
+}
+
+// 카드마다 살짝 다른 기울기를 줘서 붙여 놓은 느낌을 낸다
+const TILTS = ['-rotate-1', 'rotate-1', 'rotate-0', '-rotate-[0.5deg]', 'rotate-[0.5deg]']
 
 function App() {
   const [diaries, setDiaries] = useState([])
@@ -56,34 +71,42 @@ function App() {
     filter === 'all' ? diaries : diaries.filter((d) => d.emotion === filter)
 
   const tabClass = (active) =>
-    `shrink-0 rounded-full px-3 py-1.5 text-sm font-medium transition ${
+    `shrink-0 rounded-full border-2 px-3 py-1 transition ${
       active
-        ? 'bg-indigo-600 text-white'
-        : 'bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100'
+        ? 'border-pink-400 bg-pink-400 text-white shadow-md'
+        : 'border-pink-200 bg-white/80 text-stone-600 hover:bg-pink-50'
     }`
 
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-4 py-8 sm:py-12">
-      <h1 className="mb-6 text-center text-3xl font-bold">📔 감정 일기</h1>
+      <header className="mb-8 text-center">
+        <h1 className="font-title text-4xl text-pink-500 drop-shadow-sm sm:text-5xl">
+          ✨ 나의 감정 일기 ✨
+        </h1>
+        <p className="mt-2 text-stone-500">오늘 하루, 마음은 어땠나요? 🌷</p>
+      </header>
 
+      {/* 새 일기 쓰기: 줄 노트 한 장 */}
       <form
         onSubmit={handleSubmit}
-        className="mb-8 space-y-4 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-6"
+        className="relative mb-10 rounded-2xl border-2 border-amber-200 bg-amber-50 p-5 pt-8 shadow-lg sm:p-7 sm:pt-9"
       >
-        <div className="grid grid-cols-5 gap-2">
+        <span className="tape absolute -top-3 left-1/2 h-6 w-28 -translate-x-1/2 -rotate-2 rounded-sm shadow-sm" />
+        <p className="mb-2 text-stone-500">오늘의 기분은?</p>
+        <div className="mb-4 grid grid-cols-5 gap-2">
           {EMOTIONS.map((em) => (
             <button
               type="button"
               key={em.value}
               onClick={() => setEmotion(em.value)}
               aria-pressed={emotion === em.value}
-              className={`flex flex-col items-center rounded-xl py-2 text-xs transition sm:text-sm ${
+              className={`flex flex-col items-center rounded-2xl py-2 text-base transition sm:text-lg ${
                 emotion === em.value
-                  ? 'bg-indigo-50 ring-2 ring-indigo-500'
-                  : 'ring-1 ring-slate-200 hover:bg-slate-50'
+                  ? `${em.chip} -translate-y-1 scale-105 shadow-md ring-2 ring-pink-400`
+                  : 'bg-white/70 ring-1 ring-amber-200 hover:-translate-y-0.5 hover:bg-white'
               }`}
             >
-              <span className="text-2xl sm:text-3xl">{em.emoji}</span>
+              <span className="text-3xl sm:text-4xl">{em.emoji}</span>
               {em.label}
             </button>
           ))}
@@ -91,31 +114,31 @@ function App() {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          rows={4}
-          placeholder="오늘의 감정과 생각을 적어보세요..."
-          className="w-full resize-none rounded-xl border border-slate-200 p-3 outline-none focus:ring-2 focus:ring-indigo-500"
+          rows={5}
+          placeholder="오늘 있었던 일, 느낀 마음을 살며시 적어보세요..."
+          className="lined w-full resize-none rounded-lg bg-white/60 px-3 py-0 text-2xl outline-none placeholder:text-stone-400 focus:bg-white"
         />
         <button
           type="submit"
           disabled={saving || !content.trim()}
-          className="w-full rounded-xl bg-indigo-600 py-2.5 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-4 w-full rounded-full bg-pink-400 py-2 font-title text-xl text-white shadow-md transition hover:bg-pink-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {saving ? '저장 중...' : '저장'}
+          {saving ? '저장 중...' : '💌 일기 저장하기'}
         </button>
       </form>
 
       {error && (
         <div
           role="alert"
-          className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700 ring-1 ring-red-200"
+          className="mb-4 rounded-2xl border-2 border-dashed border-red-300 bg-red-50 p-3 text-base text-red-600"
         >
           {error}
         </div>
       )}
 
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="mb-6 flex gap-2 overflow-x-auto px-1 pb-2">
         <button className={tabClass(filter === 'all')} onClick={() => setFilter('all')}>
-          전체
+          📖 전체
         </button>
         {EMOTIONS.map((em) => (
           <button
@@ -129,45 +152,51 @@ function App() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12" role="status" aria-label="로딩 중">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-200 border-t-indigo-600" />
+        <div className="flex flex-col items-center gap-2 py-12" role="status" aria-label="로딩 중">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-pink-200 border-t-pink-400" />
+          <span className="text-stone-500">일기장을 펼치는 중...</span>
         </div>
       ) : visible.length === 0 ? (
-        <p className="py-12 text-center text-slate-500">
+        <p className="rounded-2xl border-2 border-dashed border-pink-200 bg-white/60 py-12 text-center text-stone-500">
           {diaries.length === 0
-            ? '아직 작성된 일기가 없어요. 오늘의 첫 감정을 기록해 보세요 ✍️'
-            : '이 감정으로 작성된 일기가 없어요.'}
+            ? '아직 비어 있는 일기장이에요 📒 오늘의 첫 이야기를 남겨 보세요 ✍️'
+            : '이 감정으로 쓴 일기는 아직 없어요 🍃'}
         </p>
       ) : (
-        <ul className="space-y-3">
-          {visible.map((d) => {
+        <ul className="space-y-6">
+          {visible.map((d, i) => {
             const em = emotionOf(d.emotion)
             return (
               <li
                 key={d.id}
-                className="flex gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200"
+                className={`relative rounded-xl p-5 pt-7 shadow-md transition hover:rotate-0 hover:shadow-xl ${
+                  em?.card ?? 'bg-stone-100'
+                } ${TILTS[i % TILTS.length]}`}
               >
-                <span className="text-3xl" title={em?.label}>
-                  {em?.emoji ?? '❔'}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="whitespace-pre-wrap break-words">{d.content}</p>
-                  <time className="mt-2 block text-xs text-slate-400">
-                    {new Date(d.created_at).toLocaleString('ko-KR')}
+                <span className="tape absolute -top-3 left-6 h-5 w-20 -rotate-3 rounded-sm" />
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="text-4xl" title={em?.label}>
+                    {em?.emoji ?? '❔'}
+                  </span>
+                  <time className="flex-1 text-base text-stone-500">
+                    {formatDate(d.created_at)}
                   </time>
+                  <button
+                    onClick={() => handleDelete(d.id)}
+                    className="rounded-full bg-white/70 px-3 py-0.5 text-base text-stone-500 transition hover:bg-red-100 hover:text-red-600"
+                    aria-label="일기 삭제"
+                  >
+                    🗑️ 삭제
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleDelete(d.id)}
-                  className="self-start rounded-lg px-2 py-1 text-sm text-slate-400 hover:bg-red-50 hover:text-red-600"
-                  aria-label="일기 삭제"
-                >
-                  삭제
-                </button>
+                <p className="lined whitespace-pre-wrap break-words text-2xl">{d.content}</p>
               </li>
             )
           })}
         </ul>
       )}
+
+      <footer className="mt-12 text-center text-stone-400">- 오늘도 수고했어요 🌙 -</footer>
     </main>
   )
 }
