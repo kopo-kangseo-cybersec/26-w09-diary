@@ -1,36 +1,49 @@
-# 감정 일기 — React + Supabase (`26-w09-diary`)
+# 마음 한 페이지 — 감정 일기
 
-> 이 README는 실습을 완성한 뒤, 배포 직전 단계에서 직접 채워 넣습니다.
-> 자세한 실습 절차는 [`guide.md`](./guide.md)를 참고하세요.
+하루의 감정과 생각을 기록하고, Supabase에 저장된 일기를 기기와 브라우저에 관계없이 확인하는 반응형 웹앱입니다.
 
-## 소개
+## 주요 기능
 
-<!-- 이 감정 일기가 무엇인지, 어떤 기능이 있는지 간단히 소개해주세요 -->
+- 기쁨, 평온, 슬픔, 화남, 불안 감정과 함께 일기 작성
+- 작성 일시 최신순 목록과 감정별 필터
+- Supabase에 일기 저장·조회·삭제
+- 로딩, 저장 중, 빈 목록, 연결 오류 안내
+- 모바일과 데스크톱 화면 지원
 
-## 어떻게 만들었나요
+## 실행 방법
 
-<!-- 어떤 도구(Copilot Plan 모드 → Agent)로, 어떤 순서로 만들었는지 흐름을 설명해주세요 -->
+1. 의존성을 설치합니다: `npm install`
+2. `.env.example`을 복사해 `.env.local`을 만들고 Supabase 프로젝트 정보를 입력합니다.
+   ```env
+   VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_YOUR_KEY
+   ```
+3. Vite 개발 서버를 실행합니다: `npm run dev`
+4. 터미널에 표시되는 주소(기본값 `http://localhost:5173/`)를 엽니다. Live Server로 `index.html`을 직접 열면 React 앱은 실행되지 않습니다.
 
-## 데이터는 어디에 저장되나요
+프로젝트의 `public.diaries` 테이블과 앱의 읽기·추가·삭제 권한 정책이 Supabase에 있어야 합니다. SQL 설정은 [`guide.md`](./guide.md)를 참고하세요. `.env.local`은 Git에 커밋하지 마세요.
 
-<!--
-diaries 테이블의 구조(컬럼)와, 8주차 To-Do(localStorage)와 무엇이 달라졌는지 정리해주세요.
-- 다른 기기(스마트폰 등)나 다른 브라우저에서 열었을 때 어떻게 되나요?
--->
+## 데이터와 보안
 
-## 보안에서 확인한 것 (사이버보안과 체크포인트)
+일기 데이터는 Supabase의 `diaries` 테이블(`id`, `content`, `emotion`, `created_at`)에 저장됩니다. 브라우저가 Supabase와 직접 통신하며, 일기 작성·삭제 뒤 목록을 다시 가져옵니다. Realtime 구독은 사용하지 않습니다.
 
-<!--
-- Supabase 키는 어디에 보관했고, 왜 GitHub에 올리지 않았나요?
-- 브라우저 개발자 도구(Network 탭)나 배포 파일에서 키가 보였나요? 그렇다면 우리의 데이터를 실질적으로 지켜주는 것은 무엇인가요?
-- 지금 설정된 RLS 정책(using (true))의 한계와 위험성은 무엇인가요?
--->
+브라우저에는 공개용 Supabase publishable key가 전달됩니다. 실제 접근 범위는 Supabase 권한과 RLS 정책으로 보호해야 합니다. 현재 실습 정책은 익명 사용자에게 일기 읽기·추가·삭제를 허용하므로, 민감한 개인 일기에 사용하기에는 안전하지 않습니다. 실제 서비스라면 사용자 로그인과 사용자별 RLS 정책을 추가하세요. Secret/service-role 키는 브라우저 코드에 넣지 않습니다.
 
-## 실행 및 배포 링크
+## 배포
 
-- Netlify 배포 URL: 
-- GitHub Pages 배포 URL: 
+- GitHub Pages: [마음 한 페이지 열기](https://kimsihyeon07.github.io/26-w09-diary/)
+- Netlify: 아직 배포하지 않았습니다.
 
-## 커스터마이징한 부분
+GitHub Pages는 빌드된 `dist` 폴더를 `gh-pages` 브랜치에서 제공합니다. 소스 변경 후 `.env.local`이 준비된 상태로 `npm run build`를 실행하고, `npx gh-pages -d dist`로 배포할 수 있습니다.
 
-<!-- 기본 요구사항 외에 직접 추가하거나 바꾼 부분이 있다면 적어주세요 (예: 삭제 확인 창, 감정별 통계 등) -->
+## 구현 구조 및 확인
+
+- `src/lib/supabase.js`: Supabase 클라이언트 초기화와 환경변수 검증
+- `src/api/diaries.js`: 일기 조회, 추가, 삭제
+- `src/App.jsx`: 감정 선택, 작성 폼, 필터, 목록, 상태 화면
+- Tailwind CSS와 Vite 플러그인으로 반응형 스타일 구성
+
+확인 명령:
+
+- `npm run lint`
+- `npm run build`
