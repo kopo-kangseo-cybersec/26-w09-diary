@@ -6,8 +6,8 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #292524;
-  background: #faf9f7;
+  color: #453b2f;
+  background: #f5eddd;
 
   font-optical-sizing: auto;
 }
@@ -32,6 +32,268 @@ button:disabled {
 }
 
 ::selection {
-  color: #4c1d95;
-  background: #ede9fe;
+  color: #6f4424;
+  background: #f4dfad;
+}
+
+.journal-scene {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: #f5eddd;
+  background-image:
+    radial-gradient(ellipse at 12% 9%, rgb(255 255 255 / 70%), transparent 29rem),
+    radial-gradient(ellipse at 88% 30%, rgb(241 216 179 / 42%), transparent 27rem),
+    repeating-linear-gradient(0deg, rgb(142 111 71 / 2%) 0 1px, transparent 1px 5px);
+}
+
+.journal-scene::before,
+.journal-scene::after {
+  position: absolute;
+  z-index: -1;
+  color: rgb(153 115 73 / 16%);
+  font-family: Georgia, serif;
+  pointer-events: none;
+}
+
+.journal-scene::before {
+  top: 8rem;
+  left: max(1.5rem, calc((100vw - 62rem) / 2));
+  content: "✿";
+  font-size: 4rem;
+  transform: rotate(-16deg);
+}
+
+.journal-scene::after {
+  top: 21rem;
+  right: max(1.5rem, calc((100vw - 62rem) / 2));
+  content: "♡";
+  font-size: 3.5rem;
+  transform: rotate(12deg);
+}
+
+.journal-header {
+  position: relative;
+}
+
+.journal-stamp {
+  color: #9c6842;
+  background: #f2dfbd;
+  box-shadow: inset 0 0 0 1px rgb(143 93 47 / 12%), 0 5px 12px rgb(97 70 40 / 9%);
+  transform: rotate(-8deg);
+}
+
+.little-label {
+  color: #aa7950;
+}
+
+.journal-title {
+  color: #68472e;
+  font-family: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", cursive;
+}
+
+.journal-page {
+  border: 1px solid rgb(147 113 69 / 17%);
+  background-color: #fffdf5;
+  background-image:
+    radial-gradient(ellipse at 4% 5%, rgb(255 255 255 / 85%), transparent 24rem),
+    repeating-linear-gradient(0deg, rgb(128 101 67 / 2%) 0 1px, transparent 1px 4px);
+  box-shadow: 0 20px 50px -35px rgb(88 61 34 / 42%), 0 3px 8px rgb(88 61 34 / 5%);
+}
+
+.journal-compose {
+  overflow: hidden;
+}
+
+.journal-compose::before {
+  position: absolute;
+  top: 1.5rem;
+  bottom: 1.5rem;
+  left: 0.85rem;
+  width: 1rem;
+  border-right: 1px solid rgb(197 113 94 / 24%);
+  background-image: radial-gradient(circle, #dacbb0 0 2px, transparent 2.7px);
+  background-position: center top;
+  background-size: 0.85rem 2rem;
+  content: "";
+}
+
+.journal-compose::after {
+  position: absolute;
+  top: -0.5rem;
+  right: 2rem;
+  width: 5.5rem;
+  height: 1.55rem;
+  border-right: 1px solid rgb(174 138 77 / 11%);
+  border-left: 1px solid rgb(174 138 77 / 11%);
+  background: rgb(238 210 150 / 65%);
+  content: "";
+  transform: rotate(3deg);
+}
+
+.journal-section-title {
+  color: #68472e;
+}
+
+.emotion-choice {
+  border-radius: 1rem 1rem 1.15rem 0.9rem;
+  box-shadow: 0 3px 5px rgb(87 63 36 / 5%);
+}
+
+.emotion-choice:nth-child(odd) {
+  transform: rotate(-1.5deg);
+}
+
+.emotion-choice:nth-child(even) {
+  transform: rotate(1.5deg);
+}
+
+.emotion-choice:hover {
+  box-shadow: 0 7px 12px rgb(87 63 36 / 10%);
+}
+
+.emotion-choice-selected {
+  box-shadow: 0 6px 12px rgb(120 86 41 / 16%);
+}
+
+.journal-textarea {
+  min-height: 10rem;
+  border: 1px solid rgb(157 119 71 / 16%);
+  background-color: rgb(255 255 255 / 55%);
+  background-image:
+    linear-gradient(90deg, transparent 0 1.35rem, rgb(198 113 94 / 19%) 1.35rem 1.42rem, transparent 1.42rem),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgb(131 105 68 / 13%) 31px 32px);
+  background-position: left top;
+  background-size: 100% 32px;
+  color: #493a2b;
+  padding-left: 2rem;
+}
+
+.journal-textarea:focus {
+  border-color: rgb(168 119 67 / 45%);
+  background-color: #fffefa;
+}
+
+.ink-button {
+  color: #fffaf0;
+  background: #93613f;
+  box-shadow: 0 4px 0 #754b31, 0 7px 13px rgb(90 56 33 / 15%);
+}
+
+.ink-button:hover:not(:disabled) {
+  background: #805235;
+  transform: translateY(-1px);
+}
+
+.ink-button:active:not(:disabled) {
+  box-shadow: 0 2px 0 #754b31;
+  transform: translateY(2px);
+}
+
+.ink-button:disabled {
+  color: #fffaf0;
+  background: #c4a991;
+  box-shadow: 0 4px 0 #aa8c73;
+}
+
+.entry-count {
+  color: #8e694a;
+}
+
+.journal-filter {
+  box-shadow: 0 2px 4px rgb(87 63 36 / 4%);
+}
+
+.journal-filter-active {
+  border: 1px solid #79563a;
+  background: #79563a;
+  color: #fffaf0;
+  box-shadow: 0 3px 7px rgb(87 63 36 / 17%);
+}
+
+.diary-entry {
+  border: 1px solid rgb(147 113 69 / 17%);
+  background-color: #fffdf7;
+  background-image:
+    linear-gradient(90deg, transparent 0 2.4rem, rgb(197 113 94 / 15%) 2.4rem 2.46rem, transparent 2.46rem),
+    repeating-linear-gradient(0deg, transparent 0 31px, rgb(128 101 67 / 9%) 31px 32px);
+  box-shadow: 0 8px 20px -16px rgb(88 61 34 / 45%);
+}
+
+.diary-entry::before {
+  position: absolute;
+  top: -0.45rem;
+  left: 50%;
+  width: 3.7rem;
+  height: 1rem;
+  background: rgb(221 185 128 / 48%);
+  content: "";
+  transform: translateX(-50%) rotate(-2deg);
+}
+
+.diary-entry:nth-child(even)::before {
+  background: rgb(202 176 186 / 45%);
+  transform: translateX(-50%) rotate(2deg);
+}
+
+.diary-entry:hover {
+  border-color: rgb(166 122 73 / 35%);
+  box-shadow: 0 12px 25px -17px rgb(88 61 34 / 55%);
+  transform: translateY(-2px);
+}
+
+.diary-handwriting {
+  padding-left: 0.25rem;
+  font-family: "Gowun Dodum", "Apple SD Gothic Neo", "Malgun Gothic", cursive;
+  letter-spacing: 0.015em;
+}
+
+.journal-footer {
+  color: #a18362;
+}
+
+.journal-footer span {
+  padding-inline: 0.4rem;
+  color: #c0935e;
+}
+
+@media (max-width: 640px) {
+  .journal-scene::before {
+    top: 5rem;
+    left: 0.25rem;
+    font-size: 2.5rem;
+  }
+
+  .journal-scene::after {
+    top: 17rem;
+    right: 0.25rem;
+    font-size: 2.25rem;
+  }
+
+  .journal-compose::before {
+    left: 0.45rem;
+    width: 0.65rem;
+  }
+
+  .journal-compose::after {
+    right: 1rem;
+    width: 4rem;
+  }
+
+  .diary-entry {
+    background-image:
+      linear-gradient(90deg, transparent 0 1.75rem, rgb(197 113 94 / 15%) 1.75rem 1.81rem, transparent 1.81rem),
+      repeating-linear-gradient(0deg, transparent 0 31px, rgb(128 101 67 / 9%) 31px 32px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
