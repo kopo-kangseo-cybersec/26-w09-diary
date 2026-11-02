@@ -40,6 +40,32 @@ main              (원본 보관 — 절대 merge하지 않습니다)
 
 ---
 
+## 현재 실습 진행 기록 (2026-11-02 기준)
+
+아래는 이 저장소와 Supabase 대시보드에서 확인한 진행 상태입니다. 배포나 제출처럼 아직 확인하지 못한 작업은 완료로 표시하지 않았습니다.
+
+### 완료한 작업
+
+- **Supabase 프로젝트 및 테이블**: 프로젝트 `diary` (Project ref: `kdkrxwqdplhbnbfqnvjc`)의 `public.diaries` 테이블에 연결했습니다.
+- **환경변수**: 프로젝트 루트의 `.env.local`에 Project URL과 `sb_publishable_...` 형식의 Publishable Key를 설정했습니다. 실제 키 값은 이 문서에 기록하지 않습니다. `.env.local`은 `.gitignore`에 의해 Git 추적에서 제외됩니다.
+- **기본 의존성 커밋**: `dev` 브랜치에서 `90f6cc1 chore: 프로젝트 초기 의존성 설치 및 package-lock 생성` 커밋을 만들고 `origin/dev`에 푸시했습니다.
+- **기능 작업 브랜치**: `dev`에서 `diary` 브랜치를 만들고 `origin/diary`에 푸시했습니다.
+- **감정 일기 구현**: `3a3127e feat: Supabase 감정 일기 앱 구현` 커밋으로 Supabase 연결, 감정별 작성·필터·목록·삭제 및 오류/빈 상태 화면을 구현했습니다.
+- **Supabase CRUD 확인**: 앱에서 목록 조회 후 테스트 일기를 저장해 목록에서 확인했고, 이어 삭제해 목록에서 사라지는 것까지 확인했습니다. 테스트 일기는 삭제하여 남겨두지 않았습니다.
+- **로컬 검사**: `npm run lint`와 `npm run build`가 모두 통과했습니다.
+- **앱 실행 주소**: React 앱은 Live Server의 `http://127.0.0.1:5500/index.html`이 아니라 Vite의 `http://localhost:5173/`에서 실행합니다. `npm run dev`로 서버를 시작하세요.
+
+### 아직 확인되지 않은 단계
+
+- 브라우저 개발자 도구의 Network 탭에서 Publishable Key가 요청에 포함되는지 직접 확인하는 보안 관찰
+- Netlify와 GitHub Pages 설정·배포, 배포 주소 기록, 스마트폰과의 교차 기기 확인
+- `diary`를 `dev`에 병합하고, 배포 링크를 포함해 `README.md`를 완성하는 작업
+- 릴리스 태그 생성 및 원본 저장소로 Pull Request 제출
+
+위 항목은 이 작업 환경에서 완료를 확인하지 못했습니다. 이미 진행했다면 배포 링크와 결과를 기록하고, 아니라면 아래 6~10단계 절차를 이어서 진행하세요. 확인 가능한 배포 URL이 없어 `README.md`에는 임의의 URL을 적지 않았습니다.
+
+---
+
 ## 시작 상태
 
 이 저장소의 `main`에는 **Vite + React 기본 프로젝트**와 필요한 의존성이 미리 세팅되어 있습니다.
@@ -237,9 +263,9 @@ create policy "anyone can delete" on public.diaries
 
 ### 5-2. 계획 검토 및 구현 승인 (사람이 할 일)
 1. Copilot이 답변으로 제시한 **구현 계획(Plan)**을 읽고 아래 3가지가 포함되었는지 확인합니다:
-   - [ ] `src/lib/supabase.js` 클라이언트 생성 계획이 있는가?
-   - [ ] `src/api/diaries.js`에 CRUD 함수를 분리하는 계획이 있는가?
-   - [ ] 로딩·저장 중·오류·빈 상태 처리가 포함되었는가?
+   - [x] `src/lib/supabase.js` 클라이언트 생성 계획이 있는가?
+   - [x] `src/api/diaries.js`에 CRUD 함수를 분리하는 계획이 있는가?
+   - [x] 로딩·저장 중·오류·빈 상태 처리가 포함되었는가?
 2. 계획이 만족스러우면 **Start Implementation** 버튼을 누릅니다.
    - 💡 **버튼이 안 보이고 "계획 검토 필요"만 깜빡일 때**: 채팅창에 `계획 승인, 구현 시작해줘`라고 입력하면 Agent가 즉시 구현을 시작합니다.
 3. Agent가 구현을 마칠 때까지 잠시 기다립니다 (터미널 명령어 실행 허용 창이 뜨면 허용해 줍니다).
@@ -261,6 +287,7 @@ create policy "anyone can delete" on public.diaries
    git add .
    git commit -m "feat: Supabase 연동 감정 일기 구현"
    ```
+   > 이 저장소에서는 실제 CRUD까지 확인하고 `3a3127e feat: Supabase 감정 일기 앱 구현` 커밋을 `diary` 브랜치에 만들어 `origin/diary`에 푸시했습니다.
 
 ---
 
@@ -433,6 +460,10 @@ Codespaces를 삭제했더라도 당황하지 마세요! 소스 코드는 GitHub
   → Netlify 대시보드의 **Site configuration → Environment variables**에 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_PUBLISHABLE_KEY`가 오타 없이 들어갔는지 확인하세요. 등록 후 반드시 **Deploys → Trigger deploy → Clear cache and deploy site**를 눌러 재빌드해야 합니다.
 - **`permission denied for table diaries` 오류가 발생한다**:
   → 3-2단계 SQL의 `grant select, insert, delete on public.diaries to anon;` 구문이 실행되지 않았습니다. Supabase SQL Editor에서 다시 실행하세요.
+- **Live Server로 열었더니 빈 화면이 나온다**:
+  → Vite + React 앱을 `index.html` 파일 서버로 실행할 수는 없습니다. 프로젝트 루트에서 `npm run dev`를 실행하고 터미널에 표시되는 Vite 주소(기본값 `http://localhost:5173/`)로 접속하세요. `http://127.0.0.1:5500/`은 Live Server 주소입니다.
+- **앱은 열리지만 Supabase 연결 오류가 나온다**:
+  → 프로젝트 루트의 `.env.local`에 실제 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_PUBLISHABLE_KEY`가 있는지 확인하고 Vite 서버를 재시작하세요. `xxxxxxxx` 같은 예시값이나 `sb_secret_...`/`service_role` 키는 사용하지 마세요.
 - **일기를 저장하려는데 `new row violates check constraint` 에러가 발생한다**:
   → 테이블 정의 시 지정한 5가지 감정(`joy`, `calm`, `sad`, `angry`, `anxious`) 외의 다른 값이 전송되고 있습니다. `src/api/diaries.js`나 컴포넌트의 감정 value 값을 확인하세요.
 - **GitHub Pages 배포 후 빈 화면만 나온다**:
