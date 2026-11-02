@@ -59,6 +59,14 @@ function App() {
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState('')
   const [formMessage, setFormMessage] = useState('')
+  const [todayLabel] = useState(() =>
+    new Intl.DateTimeFormat('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      weekday: 'long',
+    }).format(new Date()),
+  )
 
   const refreshDiaries = useCallback(async ({ showLoading = true } = {}) => {
     if (showLoading) {
@@ -161,49 +169,62 @@ function App() {
 
   return (
     <div className="min-h-screen px-4 pb-16 sm:px-6">
-      <header className="mx-auto flex max-w-5xl items-center justify-between py-6 sm:py-8">
+      <header className="journal-header mx-auto flex max-w-4xl items-center justify-between py-5 sm:py-6">
         <a href="./" className="flex items-center gap-3 text-inherit no-underline">
-          <span className="flex size-11 items-center justify-center rounded-2xl bg-emerald-100 text-2xl">
-            🌱
+          <span className="journal-brand-mark flex size-11 items-center justify-center rounded-2xl bg-[#e8d8bc] text-2xl">
+            🌼
           </span>
-          <span className="text-lg font-bold tracking-tight text-stone-800">
+          <span className="text-lg font-bold tracking-tight text-[#634739]">
             마음 한 페이지
           </span>
         </a>
-        <span className="hidden text-sm text-stone-500 sm:block">
+        <span className="hidden items-center gap-2 text-sm text-[#8f7d6a] sm:flex">
+          <span aria-hidden="true">✦</span>
           오늘의 마음을 천천히 들여다봐요
         </span>
       </header>
 
-      <main className="mx-auto max-w-5xl">
-        <section className="mb-8 py-5 text-center sm:mb-10 sm:py-8">
-          <p className="mb-3 text-sm font-semibold tracking-[0.18em] text-emerald-700">
-            MY DAILY JOURNAL
+      <main className="mx-auto max-w-4xl">
+        <section className="mb-7 py-7 text-center sm:mb-9 sm:py-9">
+          <p className="mb-3 text-xs font-semibold tracking-[0.24em] text-[#9a7656]">
+            A LITTLE NOTE TO MYSELF
           </p>
-          <h1 className="mb-3 text-3xl font-bold tracking-tight text-stone-800 sm:text-4xl">
+          <h1 className="journal-heading mb-3 text-3xl font-bold sm:text-5xl">
             오늘은 어떤 하루였나요?
           </h1>
-          <p className="text-sm leading-6 text-stone-500 sm:text-base">
-            작은 마음도 괜찮아요. 지금 느끼는 그대로 기록해보세요.
+          <p className="text-sm leading-6 text-[#8f7d6a] sm:text-base">
+            작은 마음도 괜찮아요. 지금 느끼는 그대로 적어보세요.
           </p>
+          <div className="mt-5 flex items-center justify-center gap-2 text-xs text-[#a28d76]">
+            <span className="h-px w-8 bg-[#d7c4a8]" />
+            <span aria-hidden="true">✿</span>
+            <span>{todayLabel}</span>
+            <span aria-hidden="true">✿</span>
+            <span className="h-px w-8 bg-[#d7c4a8]" />
+          </div>
         </section>
 
         <section
           aria-labelledby="write-heading"
-          className="mb-10 rounded-3xl border border-stone-200/80 bg-white p-5 shadow-[0_12px_40px_-28px_rgba(55,65,57,0.28)] sm:mb-12 sm:p-8"
+          className="journal-paper entry-paper mb-10 p-5 pl-14 sm:mb-12 sm:p-8 sm:pl-16"
         >
-          <div className="mb-6">
-            <p className="mb-2 text-xs font-semibold tracking-widest text-emerald-700">
-              WRITE
-            </p>
-            <h2 id="write-heading" className="text-xl font-bold text-stone-800">
-              오늘의 감정 기록하기
-            </h2>
+          <div className="mb-6 flex items-start justify-between gap-3">
+            <div>
+              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-[#987653]">
+                TODAY&apos;S PAGE
+              </p>
+              <h2 id="write-heading" className="text-xl font-bold text-[#634739]">
+                오늘의 감정 기록하기
+              </h2>
+            </div>
+            <span className="hidden -rotate-6 rounded-sm border border-[#d6c3a5] px-2.5 py-1 text-[10px] font-semibold tracking-wider text-[#a18360] sm:inline-block">
+              DEAR ME
+            </span>
           </div>
 
           <form onSubmit={handleSubmit}>
             <fieldset className="mb-6">
-              <legend className="mb-3 text-sm font-semibold text-stone-700">
+              <legend className="mb-3 text-sm font-semibold text-[#715d4c]">
                 지금 기분은 어떤가요?
               </legend>
               <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 sm:gap-3">
@@ -216,10 +237,10 @@ function App() {
                       setSelectedEmotion(emotion.value)
                       setFormMessage('')
                     }}
-                    className={`flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 text-sm font-medium transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
+                    className={`emotion-choice flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-sm font-medium transition hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8a684d] ${
                       selectedEmotion === emotion.value
                         ? emotionStyles[emotion.color].selected
-                        : 'border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+                        : 'text-[#766657]'
                     }`}
                   >
                     <span className="text-2xl" aria-hidden="true">
@@ -233,7 +254,7 @@ function App() {
 
             <label
               htmlFor="diary-content"
-              className="mb-3 block text-sm font-semibold text-stone-700"
+              className="mb-2 block text-sm font-semibold text-[#715d4c]"
             >
               오늘 있었던 일이나 마음을 적어주세요
             </label>
@@ -246,16 +267,16 @@ function App() {
               }}
               placeholder="무슨 일이 있었나요? 어떤 마음이 들었나요?"
               rows={5}
-              className="w-full resize-y rounded-2xl border border-stone-200 bg-stone-50/70 px-4 py-3.5 text-[15px] leading-7 text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-emerald-400 focus:bg-white focus:ring-4 focus:ring-emerald-50"
+              className="entry-textarea w-full resize-y px-3 py-1 text-[15px] text-[#5b4b3e] outline-none placeholder:text-[#b2a391] focus:ring-0"
             />
             <div className="mt-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-              <div className="min-h-5 text-sm text-rose-600" aria-live="polite">
+              <div className="min-h-5 text-sm text-rose-700" aria-live="polite">
                 {formMessage}
               </div>
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-60 sm:w-auto"
+                className="ink-button inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl px-6 text-sm font-semibold text-[#fffaf0] transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#785642] disabled:opacity-60 sm:w-auto"
               >
                 {saving ? (
                   <>
@@ -266,23 +287,32 @@ function App() {
                     저장 중...
                   </>
                 ) : (
-                  '일기 저장하기'
+                  <>
+                    <span aria-hidden="true">✎</span>
+                    일기장에 꾹 눌러쓰기
+                  </>
                 )}
               </button>
             </div>
           </form>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute bottom-4 right-5 rotate-[-12deg] text-xl text-[#c2a883]/70"
+          >
+            ✿
+          </span>
         </section>
 
         <section aria-labelledby="list-heading">
           <div className="mb-5 flex flex-col justify-between gap-4 sm:mb-6 sm:flex-row sm:items-end">
             <div>
-              <p className="mb-2 text-xs font-semibold tracking-widest text-emerald-700">
-                YOUR JOURNAL
+              <p className="mb-2 text-xs font-semibold tracking-[0.2em] text-[#987653]">
+                LITTLE MEMORIES
               </p>
-              <h2 id="list-heading" className="text-2xl font-bold text-stone-800">
-                마음 기록
+              <h2 id="list-heading" className="journal-heading text-2xl font-bold">
+                차곡차곡 쌓인 마음
                 {diaries && (
-                  <span className="ml-2 align-middle text-sm font-medium text-stone-400">
+                  <span className="ml-2 align-middle font-sans text-sm font-medium text-[#a28d76]">
                     {diaries.length}
                   </span>
                 )}
@@ -292,9 +322,9 @@ function App() {
               type="button"
               onClick={refreshDiaries}
               disabled={loading}
-              className="self-start rounded-lg px-3 py-2 text-sm font-medium text-stone-500 transition hover:bg-white hover:text-emerald-800 disabled:opacity-50 sm:self-auto"
+              className="self-start rounded-lg border border-[#e2d4bf] bg-[#fffaf0]/75 px-3 py-2 text-sm font-medium text-[#856d56] transition hover:bg-[#fffdf8] hover:text-[#634739] disabled:opacity-50 sm:self-auto"
             >
-              새로고침
+              ↻ 다시 펼쳐보기
             </button>
           </div>
 
@@ -307,10 +337,10 @@ function App() {
               type="button"
               aria-pressed={activeFilter === 'all'}
               onClick={() => setActiveFilter('all')}
-              className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
+              className={`filter-chip shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition ${
                 activeFilter === 'all'
-                  ? 'bg-stone-800 text-white'
-                  : 'border border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+                  ? 'filter-chip-active'
+                  : ''
               }`}
             >
               전체 보기
@@ -321,10 +351,10 @@ function App() {
                 type="button"
                 aria-pressed={activeFilter === emotion.value}
                 onClick={() => setActiveFilter(emotion.value)}
-                className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${
+                className={`filter-chip shrink-0 rounded-full border px-4 py-2 text-sm font-medium transition ${
                   activeFilter === emotion.value
-                    ? emotionStyles[emotion.color].selected
-                    : 'border border-stone-200 bg-white text-stone-600 hover:border-stone-300'
+                    ? 'filter-chip-active'
+                    : ''
                 }`}
               >
                 <span aria-hidden="true">{emotion.emoji}</span>
@@ -336,14 +366,14 @@ function App() {
           {error && (
             <div
               role="alert"
-              className="mb-5 flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-4 text-sm text-rose-800 sm:flex-row sm:items-center sm:justify-between"
+              className="mb-5 flex flex-col gap-3 rounded-2xl border border-rose-200 bg-[#fff3ee] px-4 py-4 text-sm text-rose-900 sm:flex-row sm:items-center sm:justify-between"
             >
               <p className="leading-6">{error}</p>
               <button
                 type="button"
                 onClick={refreshDiaries}
                 disabled={loading}
-                className="shrink-0 self-start rounded-lg border border-rose-200 bg-white px-3 py-2 font-semibold hover:bg-rose-100 disabled:opacity-50 sm:self-auto"
+                className="shrink-0 self-start rounded-lg border border-rose-200 bg-[#fffaf6] px-3 py-2 font-semibold hover:bg-rose-100 disabled:opacity-50 sm:self-auto"
               >
                 다시 시도
               </button>
@@ -353,10 +383,10 @@ function App() {
           {loading && (
             <div
               role="status"
-              className="flex min-h-40 items-center justify-center gap-3 rounded-3xl border border-stone-200 bg-white text-sm text-stone-500"
+              className="journal-paper flex min-h-40 items-center justify-center gap-3 text-sm text-[#806d5b]"
             >
               <span
-                className="size-5 animate-spin rounded-full border-2 border-emerald-100 border-t-emerald-700"
+                className="size-5 animate-spin rounded-full border-2 border-[#eadfce] border-t-[#8a684d]"
                 aria-hidden="true"
               />
               일기를 불러오는 중...
@@ -364,7 +394,7 @@ function App() {
           )}
 
           {!loading && diaries && filteredDiaries.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-x-5 gap-y-5 px-1 pb-2 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-6">
               {filteredDiaries.map((diary) => {
                 const emotion = emotions.find(
                   (item) => item.value === diary.emotion,
@@ -374,12 +404,12 @@ function App() {
                 return (
                   <article
                     key={diary.id}
-                    className="group rounded-3xl border border-stone-200/80 bg-white p-5 shadow-[0_10px_30px_-28px_rgba(55,65,57,0.3)] transition hover:border-stone-300 hover:shadow-[0_16px_38px_-28px_rgba(55,65,57,0.35)] sm:p-6"
+                    className="diary-card group relative p-5 pt-7 sm:p-6 sm:pt-8"
                   >
                     <div className="mb-4 flex items-center justify-between gap-3">
                       <span
-                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${
-                          style?.badge ?? 'bg-stone-100 text-stone-600'
+                        className={`inline-flex items-center gap-2 rounded-full border border-white/60 px-3 py-1.5 text-sm font-semibold ${
+                          style?.badge ?? 'bg-[#f3eadc] text-[#74604e]'
                         }`}
                       >
                         <span className="text-lg" aria-hidden="true">
@@ -392,17 +422,17 @@ function App() {
                         onClick={() => handleDelete(diary)}
                         disabled={deleting || saving}
                         aria-label={`${emotion?.label ?? ''} 일기 삭제`}
-                        className="rounded-lg px-2.5 py-1.5 text-sm text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 disabled:opacity-50"
+                        className="rounded-lg px-2.5 py-1.5 text-sm text-[#a28e79] transition hover:bg-[#fff0e9] hover:text-rose-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-500 disabled:opacity-50"
                       >
                         삭제
                       </button>
                     </div>
-                    <p className="min-h-14 whitespace-pre-wrap break-words text-[15px] leading-7 text-stone-700">
+                    <p className="min-h-14 whitespace-pre-wrap break-words pl-2 text-[15px] leading-7 text-[#5d4c3e]">
                       {diary.content}
                     </p>
                     <time
                       dateTime={diary.created_at}
-                      className="mt-5 block border-t border-stone-100 pt-4 text-xs text-stone-400"
+                    className="mt-5 block border-t pt-4 text-xs"
                     >
                       {formatDate(diary.created_at)}
                     </time>
@@ -413,16 +443,16 @@ function App() {
           )}
 
           {!loading && !error && diaries && filteredDiaries.length === 0 && (
-            <div className="flex min-h-56 flex-col items-center justify-center rounded-3xl border border-dashed border-stone-300 bg-white/70 px-6 text-center">
+            <div className="paper-empty-state flex min-h-56 flex-col items-center justify-center rounded-3xl border border-dashed px-6 text-center">
               <span className="mb-3 text-4xl" aria-hidden="true">
                 {activeFilter === 'all' ? '📖' : '🌿'}
               </span>
-              <h3 className="mb-2 font-semibold text-stone-700">
+              <h3 className="mb-2 font-semibold text-[#715d4c]">
                 {activeFilter === 'all'
                   ? '아직 기록이 없어요'
                   : '이 감정의 기록은 아직 없어요'}
               </h3>
-              <p className="text-sm leading-6 text-stone-500">
+              <p className="text-sm leading-6 text-[#8f7d6a]">
                 {activeFilter === 'all'
                   ? '오늘의 마음을 첫 일기로 남겨보세요.'
                   : '다른 감정을 선택하거나, 새 일기를 작성해보세요.'}
@@ -432,8 +462,10 @@ function App() {
         </section>
       </main>
 
-      <footer className="mx-auto mt-14 max-w-5xl border-t border-stone-200 pt-6 text-center text-xs text-stone-400">
-        나의 기록은 안전하게, 나의 속도로
+      <footer className="mx-auto mt-14 max-w-4xl border-t border-dashed border-[#d6c6af] pt-6 text-center text-xs text-[#9a8874]">
+        <span aria-hidden="true">✦</span>
+        <span className="mx-2">소중한 마음을 한 장씩 모아두어요</span>
+        <span aria-hidden="true">✦</span>
       </footer>
     </div>
   )
