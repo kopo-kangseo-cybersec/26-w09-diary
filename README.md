@@ -107,9 +107,9 @@ Supabase 연결에 필요한 URL과 Publishable Key는 프로젝트 최상위 �
 
 ## 실행 및 배포 링크
 
-- Netlify 배포 URL: (배포 후 입력)
-- GitHub Pages 배포 URL: (배포 후 입력)
-- GitHub 저장소 URL: (저장소 주소 입력)
+- Netlify 배포 URL: (https://diarydas.netlify.app/)
+- GitHub Pages 배포 URL: https://parksj9999.github.io/26-w09-diary/
+- GitHub 저장소 URL: (https://github.com/parksj9999/26-w09-diary.git)
 
 ## 커스터마이징한 부분
 
