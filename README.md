@@ -99,3 +99,8 @@ npm run build
 - `service_role` 또는 `sb_secret_...` 키는 RLS를 우회할 수 있으므로 프런트엔드나 `VITE_` 환경변수에 절대 넣지 마세요.
 - 데이터 접근 권한은 Supabase 권한 부여와 RLS 정책이 통제합니다. 이 저장소 가이드의 `using (true)` 정책은 실습을 위한 공개 정책이며, 누구나 모든 일기를 읽고 삭제할 수 있습니다.
 - `.env.local`은 Git에 커밋되지 않도록 `.gitignore`에 포함되어 있습니다. 공개 키만 사용하더라도 환경변수 파일은 저장소에 올리지 마세요.
+
+## 실행 및 배포 링크
+
+- Netlify 배포 URL:https://ey-diary.netlify.app/
+- GitHub 배포 URL:https://leey102.github.io/26-w09-diary/
