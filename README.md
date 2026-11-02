@@ -1,36 +1,32 @@
-# 감정 일기 — React + Supabase (`26-w09-diary`)
+# 마음 일기
 
-> 이 README는 실습을 완성한 뒤, 배포 직전 단계에서 직접 채워 넣습니다.
-> 자세한 실습 절차는 [`guide.md`](./guide.md)를 참고하세요.
+하루의 감정과 생각을 기록하고, Supabase에 저장된 일기를 다른 기기에서도 확인하는 반응형 웹앱입니다.
 
-## 소개
+## 기능
 
-<!-- 이 감정 일기가 무엇인지, 어떤 기능이 있는지 간단히 소개해주세요 -->
+- 기쁨, 평온, 슬픔, 화남, 불안 중 오늘의 감정을 선택해 일기를 작성합니다.
+- 작성 일시 최신순으로 기록을 확인하고 감정별로 모아볼 수 있습니다.
+- 일기를 삭제할 수 있으며, 작성·삭제 후 목록을 다시 조회합니다.
+- Supabase 연결이나 설정에 문제가 있으면 화면에 오류 안내를 표시합니다.
 
-## 어떻게 만들었나요
+## 실행
 
-<!-- 어떤 도구(Copilot Plan 모드 → Agent)로, 어떤 순서로 만들었는지 흐름을 설명해주세요 -->
+1. 프로젝트 루트에 `.env.local` 파일을 만들고 Supabase 프로젝트 정보를 입력합니다.
 
-## 데이터는 어디에 저장되나요
+   ```env
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your-key
+   ```
 
-<!--
-diaries 테이블의 구조(컬럼)와, 8주차 To-Do(localStorage)와 무엇이 달라졌는지 정리해주세요.
-- 다른 기기(스마트폰 등)나 다른 브라우저에서 열었을 때 어떻게 되나요?
--->
+2. 의존성을 설치하고 개발 서버를 실행합니다.
 
-## 보안에서 확인한 것 (사이버보안과 체크포인트)
+   ```sh
+   npm install
+   npm run dev
+   ```
 
-<!--
-- Supabase 키는 어디에 보관했고, 왜 GitHub에 올리지 않았나요?
-- 브라우저 개발자 도구(Network 탭)나 배포 파일에서 키가 보였나요? 그렇다면 우리의 데이터를 실질적으로 지켜주는 것은 무엇인가요?
-- 지금 설정된 RLS 정책(using (true))의 한계와 위험성은 무엇인가요?
--->
+`diaries` 테이블은 `id`, `content`, `emotion`, `created_at` 컬럼을 사용합니다. 브라우저에서 데이터에 접근할 수 있도록 Supabase의 RLS 정책과 권한을 올바르게 설정해야 합니다. Publishable key는 프런트엔드에서 사용되므로 비밀 키처럼 데이터를 보호하지 않습니다. 실제 접근 제어는 RLS 정책으로 적용하세요.
 
-## 실행 및 배포 링크
+## 기술
 
-- Netlify 배포 URL: 
-- GitHub Pages 배포 URL: 
-
-## 커스터마이징한 부분
-
-<!-- 기본 요구사항 외에 직접 추가하거나 바꾼 부분이 있다면 적어주세요 (예: 삭제 확인 창, 감정별 통계 등) -->
+React, Vite, Tailwind CSS, Supabase JavaScript client
