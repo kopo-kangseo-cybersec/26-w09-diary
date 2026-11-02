@@ -46,7 +46,7 @@ main              (원본 보관 — 절대 merge하지 않습니다)
 
 | 파일 | 설명 |
 |---|---|
-| `package.json` | React 19, Vite, `@supabase/supabase-js` 사전 포함 |
+| `package.json` | React 19, Vite, `@supabase/supabase-js`, Tailwind CSS 사전 포함 |
 | `vite.config.js` | 배포 경로 호환을 위한 `base: './'` 사전 설정 |
 | `.env.example` | 환경변수 예시 파일 (값은 비어 있음) |
 | `.gitignore` | `node_modules`, `dist`, **`.env*` 파일**이 GitHub에 올라가지 않도록 등록됨 |
@@ -91,8 +91,8 @@ main              (원본 보관 — 절대 merge하지 않습니다)
    npm install
    npm run dev
    ```
-   > 💡 패키지(`package.json`)에 `@supabase/supabase-js`가 이미 포함되어 있으므로 추가 설치 없이 한 번에 끝납니다.
-3. 오른쪽 아래 알림창에서 **Open in Browser**를 눌러 Vite + React 기본 화면이 뜨는지 확인합니다.
+   > 💡 Supabase와 Tailwind CSS 패키지는 `package.json`에 포함되어 있으므로 `npm install`로 함께 설치됩니다.
+3. 오른쪽 아래 알림창에서 **Open in Browser**를 눌러 감정 일기 화면이 뜨는지 확인합니다. Supabase 환경변수가 아직 없다면 화면의 설정 안내를 확인하세요.
    - 알림을 놓쳤다면 하단 **PORTS** 탭 → `5173` 포트 옆 지구본 아이콘을 클릭합니다.
    - 확인 후 터미널에서 `Ctrl + C`를 눌러 서버를 잠시 종료합니다.
 4. **초기 환경 커밋 (`package-lock.json`)**:
