@@ -54,15 +54,18 @@ main              (원본 보관 — 절대 merge하지 않습니다)
 - **Supabase CRUD 확인**: 앱에서 목록 조회 후 테스트 일기를 저장해 목록에서 확인했고, 이어 삭제해 목록에서 사라지는 것까지 확인했습니다. 테스트 일기는 삭제하여 남겨두지 않았습니다.
 - **로컬 검사**: `npm run lint`와 `npm run build`가 모두 통과했습니다.
 - **앱 실행 주소**: React 앱은 Live Server의 `http://127.0.0.1:5500/index.html`이 아니라 Vite의 `http://localhost:5173/`에서 실행합니다. `npm run dev`로 서버를 시작하세요.
+- **Netlify 배포**: `dev` 브랜치를 `npm run build` / `dist` 설정으로 배포했고, Supabase 환경변수와 공개 접근을 설정했습니다. [Netlify 사이트](https://marvelous-duckanoo-4ede8e.netlify.app/)
+- **GitHub Pages 배포**: `gh-pages` 브랜치의 `/(root)`를 게시 소스로 설정했습니다. [GitHub Pages 사이트](https://kimsihyeon07.github.io/26-w09-diary/)
+- **배포 사이트 CRUD와 동기화**: 두 사이트에서 일기 작성·조회·삭제를 확인하고, Pages에서 만든 테스트 일기가 Netlify에서 보이는 것과 삭제 후 양쪽에서 사라지는 것을 확인했습니다. 테스트 데이터는 남기지 않았습니다.
+- **보안 관찰**: 배포된 사이트의 Supabase 요청에서 `sb_publishable_...` 형식의 `apikey` 헤더가 전송되는 것을 확인했습니다. 키 값 자체는 이 문서에 기록하지 않습니다.
+- **병합 및 README**: 감정 일기 구현을 `dev`에 병합하고 README에 Netlify와 Pages 링크, 기능, 데이터 저장 방식, 보안 주의사항을 기록했습니다.
 
 ### 아직 확인되지 않은 단계
 
-- 브라우저 개발자 도구의 Network 탭에서 Publishable Key가 요청에 포함되는지 직접 확인하는 보안 관찰
-- Netlify와 GitHub Pages 설정·배포, 배포 주소 기록, 스마트폰과의 교차 기기 확인
-- `diary`를 `dev`에 병합하고, 배포 링크를 포함해 `README.md`를 완성하는 작업
-- 릴리스 태그 생성 및 원본 저장소로 Pull Request 제출
+- 스마트폰 실기기에서 일기를 작성하고 PC 브라우저에서 확인하는 교차 기기 테스트
+- 릴리스 태그 생성 및 원본 저장소(`kopo-kangseo-cybersec/26-w09-diary`)의 `main`을 대상으로 Pull Request 제출
 
-위 항목은 이 작업 환경에서 완료를 확인하지 못했습니다. 이미 진행했다면 배포 링크와 결과를 기록하고, 아니라면 아래 6~10단계 절차를 이어서 진행하세요. 확인 가능한 배포 URL이 없어 `README.md`에는 임의의 URL을 적지 않았습니다.
+스마트폰 테스트는 실제 기기 접근이 없어 완료로 표시하지 않았습니다. 태그와 PR은 아래 마무리 단계에서 이어서 진행합니다.
 
 ---
 
@@ -313,6 +316,8 @@ create policy "anyone can delete" on public.diaries
 > 4. 지금 우리가 설정한 정책(`using (true)`)의 취약점은 무엇인가요?
 >    → 누구나 API 키만 알면 다른 사람의 일기까지 모두 읽고 마음대로 삭제할 수 있습니다. (실제 서비스에서는 로그인 인증과 `auth.uid() = user_id` 검증이 필수입니다.)
 
+> **이 저장소의 관찰 결과**: 배포된 Netlify 사이트가 Supabase `diaries` API를 요청할 때 공개용 Publishable Key를 `apikey` 요청 헤더에 포함하는 것을 확인했습니다. 공개용 키는 브라우저에서 숨길 수 없으며, RLS 정책은 현재 실습 구성상 익명 사용자에게 모든 일기 읽기·추가·삭제를 허용한다는 한계가 있습니다.
+
 ---
 
 ## 7단계 — `dev` 브랜치 병합 및 README 작성
@@ -361,6 +366,8 @@ Netlify는 GitHub 저장소에 코드가 올라오면, Netlify 클라우드 서�
 5. **Deploy 26-w09-diary** 버튼 클릭 → 1~2분 뒤 초록색 완료 표시와 함께 배포 URL(`https://랜덤이름.netlify.app`)이 생성됩니다.
 6. 배포 URL로 접속하여 일기장이 잘 뜨는지 확인합니다.
 
+> **이 저장소의 배포 기록**: `KimSihyeon07/26-w09-diary`를 Netlify의 `dev` 브랜치에 연결했습니다. 빌드 명령은 `npm run build`, 게시 폴더는 `dist`이며, 필요한 Supabase 환경변수를 Netlify에 등록했습니다. Production 공개 설정을 확인했고, 배포 URL은 https://marvelous-duckanoo-4ede8e.netlify.app/ 입니다.
+
 ---
 
 ### [배포 2] GitHub Pages 배포 (로컬 빌드 후 결과물 배포)
@@ -385,6 +392,8 @@ Netlify는 GitHub 저장소에 코드가 올라오면, Netlify 클라우드 서�
    - Branch: 방금 도구가 자동으로 생성해 준 **`gh-pages`**, Folder: **`/(root)`** 선택 후 Save
    - 1~2분 뒤 `https://내아이디.github.io/26-w09-diary/` 주소로 배포 완료!
 
+> **이 저장소의 배포 기록**: `gh-pages` 브랜치의 `/(root)`를 게시 소스로 설정했습니다. 사이트는 https://kimsihyeon07.github.io/26-w09-diary/ 에서 열립니다.
+
 ---
 
 ## 9단계 — 오늘의 핵심 하이라이트: Netlify ↔ GitHub Pages ↔ 스마트폰 삼각 동기화!
@@ -402,6 +411,8 @@ Netlify는 GitHub 저장소에 코드가 올라오면, Netlify 클라우드 서�
 5. **[테스트 3: 한 곳에서 삭제하고 다른 곳 확인하기]**:
    - GitHub Pages 사이트에서 일기 하나를 삭제해 보세요.
    - Netlify 사이트를 새로고침하면 삭제가 반영되어 사라집니다!
+
+> **이 저장소의 확인 결과**: Netlify와 GitHub Pages 양쪽에서 일기를 작성·조회·삭제했고, 한 사이트에서 작성한 기록이 다른 사이트 새로고침 후에도 표시되는 것을 확인했습니다. 테스트 기록은 삭제했습니다. 스마트폰 실기기 테스트는 아직 하지 않았습니다.
 
 > 🎉 **오늘의 가장 중요한 배움**:
 > - 프론트엔드 호스팅이 Netlify에 있든, GitHub Pages에 있든, 내 스마트폰에 있든 상관없습니다.
@@ -425,6 +436,8 @@ Netlify는 GitHub 저장소에 코드가 올라오면, Netlify 클라우드 서�
 3. **내 저장소 `dev` → 원본 저장소(`kopo-kangseo-cybersec/26-w09-diary`) `main`** 방향으로 Pull Request를 생성하고 템플릿을 채워 제출합니다.
    - 💡 `main`은 초기 템플릿 보존용이므로, 별도로 Release Note를 쓸 필요 없이 태그와 PR 제출로 완성이 인정됩니다.
 4. 실습이 끝난 후 [github.com/codespaces](https://github.com/codespaces)에서 오늘 사용한 Codespace를 반드시 **Stop**합니다.
+
+> **이 저장소의 마무리 상태**: `dev`에 기능 브랜치를 병합하고 README에 두 배포 링크를 기록했습니다. 태그와 원본 저장소 PR 상태는 GitHub에서 확인한 뒤 아래에 기록합니다.
 
 ---
 

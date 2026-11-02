@@ -31,10 +31,10 @@
 
 ## 배포
 
+- Netlify: [마음 한 페이지 열기](https://marvelous-duckanoo-4ede8e.netlify.app/)
 - GitHub Pages: [마음 한 페이지 열기](https://kimsihyeon07.github.io/26-w09-diary/)
-- Netlify: 아직 배포하지 않았습니다.
 
-GitHub Pages는 빌드된 `dist` 폴더를 `gh-pages` 브랜치에서 제공합니다. 소스 변경 후 `.env.local`이 준비된 상태로 `npm run build`를 실행하고, `npx gh-pages -d dist`로 배포할 수 있습니다.
+Netlify는 GitHub 저장소의 `dev` 브랜치에 연결되어 `npm run build`로 빌드하고 `dist`를 배포합니다. GitHub Pages는 빌드된 `dist` 폴더를 `gh-pages` 브랜치에서 제공합니다. 소스 변경 후 `.env.local`이 준비된 상태로 `npm run build`를 실행하고, `npx gh-pages -d dist`로 Pages를 갱신할 수 있습니다.
 
 ## 구현 구조 및 확인
 
