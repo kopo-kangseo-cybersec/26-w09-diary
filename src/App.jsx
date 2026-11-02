@@ -14,6 +14,8 @@ const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
   timeStyle: 'short',
 })
 
+const MAX_CONTENT_LENGTH = 500
+
 function getErrorMessage(error) {
   if (error instanceof Error && error.message) {
     return error.message
@@ -111,6 +113,10 @@ function App() {
   }
 
   async function handleDelete(id) {
+    if (!window.confirm('이 일기를 삭제할까요?')) {
+      return
+    }
+
     setDeletingId(id)
     setErrorMessage('')
 
@@ -186,12 +192,16 @@ function App() {
               onChange={(event) => setContent(event.target.value)}
               placeholder="오늘 하루는 어땠나요? 마음에 떠오르는 생각을 적어 보세요."
               rows={5}
+              maxLength={MAX_CONTENT_LENGTH}
               className="mt-5 w-full resize-y rounded-2xl border border-stone-200 bg-stone-50/70 px-4 py-3 text-sm leading-7 text-stone-800 outline-none transition placeholder:text-stone-400 focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-500/10 sm:px-5"
             />
             <div className="mt-3 flex flex-col-reverse items-stretch justify-between gap-3 sm:flex-row sm:items-center">
-              <p className="text-xs text-stone-400">
-                마음을 있는 그대로 적어도 괜찮아요.
-              </p>
+              <div className="flex items-center justify-between gap-3 text-xs text-stone-400">
+                <p>마음을 있는 그대로 적어도 괜찮아요.</p>
+                <p aria-live="polite">
+                  {content.length} / {MAX_CONTENT_LENGTH}
+                </p>
+              </div>
               <button
                 type="submit"
                 disabled={!content.trim() || !selectedEmotion || isSaving}
