@@ -18,7 +18,7 @@
    npm run dev
    ```
 
-`diaries` 테이블은 미리 생성되어 있어야 하며 `id`, `content`, `emotion`, `created_at` 컬럼을 사용합니다. 일기 작성 및 삭제가 완료되면 목록을 다시 조회합니다. Supabase Realtime 구독은 사용하지 않습니다.
+`diaries` 테이블은 미리 생성되어 있어야 하며 `id`, `content`, `emotion`, `created_at` 컬럼을 사용합니다. 감정 값은 `joy`, `calm`, `sad`, `angry`, `anxious`, `sleepy`입니다. 기존 테이블을 사용한다면 [guide.md](./guide.md)의 감정 제약 갱신 SQL을 Supabase에서 한 번 실행하세요. 일기 작성 및 삭제가 완료되면 목록을 다시 조회합니다. Supabase Realtime 구독은 사용하지 않습니다.
 
 ## 데이터와 보안
 

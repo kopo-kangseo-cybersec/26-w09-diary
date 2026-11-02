@@ -16,7 +16,7 @@ export async function createDiary({ content, emotion }) {
     throw new Error('일기 내용을 입력해 주세요.')
   }
 
-  if (!['joy', 'calm', 'sad', 'angry', 'anxious'].includes(emotion)) {
+  if (!['joy', 'calm', 'sad', 'angry', 'anxious', 'sleepy'].includes(emotion)) {
     throw new Error('감정을 선택해 주세요.')
   }
 

@@ -134,7 +134,7 @@ main              (원본 보관 — 절대 merge하지 않습니다)
 create table public.diaries (
   id bigint primary key generated always as identity,
   content text not null,
-  emotion text not null check (emotion in ('joy', 'calm', 'sad', 'angry', 'anxious')),
+  emotion text not null check (emotion in ('joy', 'calm', 'sad', 'angry', 'anxious', 'sleepy')),
   created_at timestamptz not null default now()
 );
 
@@ -156,6 +156,17 @@ create policy "anyone can delete" on public.diaries
 ```
 
 왼쪽 메뉴 **Table Editor**를 눌러 `diaries` 테이블과 4개 컬럼(`id`, `content`, `emotion`, `created_at`)이 정상 생성되었는지 확인합니다.
+
+이미 `diaries` 테이블을 만든 프로젝트라면 아래 SQL을 한 번 실행해 `졸림` 감정도 허용하세요:
+
+```sql
+alter table public.diaries
+  drop constraint if exists diaries_emotion_check;
+
+alter table public.diaries
+  add constraint diaries_emotion_check
+  check (emotion in ('joy', 'calm', 'sad', 'angry', 'anxious', 'sleepy'));
+```
 
 > 🔍 **[보안 체크포인트 1]**
 > - `emotion` 컬럼에 지정된 `check (emotion in (...))`은 왜 필요할까요?
@@ -207,12 +218,12 @@ create policy "anyone can delete" on public.diaries
 ## 2. 데이터 정의 (Supabase `diaries` 테이블 사용 — 이미 DB에 생성되어 있음)
 - id: bigint, 자동 생성
 - content: text, 일기 본문 (필수)
-- emotion: text, 감정 구분 ('joy' | 'calm' | 'sad' | 'angry' | 'anxious' 중 하나)
+- emotion: text, 감정 구분 ('joy' | 'calm' | 'sad' | 'angry' | 'anxious' | 'sleepy' 중 하나)
 - created_at: timestamptz, 작성 일시 (DB 기본값)
 
 ## 3. 화면 및 기능 요구사항
 - 작성 영역:
-  - 감정 선택 버튼 5개 (😊 기쁨=joy, 😌 평온=calm, 😢 슬픔=sad, 😠 화남=angry, 😰 불안=anxious)
+  - 감정 선택 버튼 6개 (😊 기쁨=joy, 😌 평온=calm, 😢 슬픔=sad, 😠 화남=angry, 😰 불안=anxious, 😴 졸림=sleepy)
   - 내용 입력창(textarea/input) + 저장 버튼
 - 목록 영역:
   - 작성된 일기를 최신순(created_at 내림차순)으로 카드 형태로 표시
@@ -230,7 +241,7 @@ create policy "anyone can delete" on public.diaries
   (import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY 사용)
 - 데이터베이스 조회(select), 추가(insert), 삭제(delete) 함수는 `src/api/diaries.js`에 모듈로 분리할 것
 - Supabase Realtime(웹소켓 구독)은 사용하지 않고, 일기 작성·삭제 시 목록을 재조회(fetch)하는 기본 CRUD 방식으로 구현할 것
-- 스타일은 Tailwind CSS를 활용해 모바일과 데스크톱 모두 깔끔한 반응형 카드 디자인으로 적용할 것
+- 스타일은 분홍색 테마의 Tailwind CSS를 활용해 모바일과 데스크톱 모두 깔끔한 반응형 카드 디자인으로 적용할 것
 - Vite 기본 예시 템플릿 코드와 이미지(hero, reactLogo 등)는 깔끔히 정리할 것
 ```
 
@@ -434,7 +445,7 @@ Codespaces를 삭제했더라도 당황하지 마세요! 소스 코드는 GitHub
   → Netlify 대시보드의 **Site configuration → Environment variables**에 `VITE_SUPABASE_URL`과 `VITE_SUPABASE_PUBLISHABLE_KEY`가 오타 없이 들어갔는지 확인하세요. 등록 후 반드시 **Deploys → Trigger deploy → Clear cache and deploy site**를 눌러 재빌드해야 합니다.
 - **`permission denied for table diaries` 오류가 발생한다**:
   → 3-2단계 SQL의 `grant select, insert, delete on public.diaries to anon;` 구문이 실행되지 않았습니다. Supabase SQL Editor에서 다시 실행하세요.
-- **일기를 저장하려는데 `new row violates check constraint` 에러가 발생한다**:
-  → 테이블 정의 시 지정한 5가지 감정(`joy`, `calm`, `sad`, `angry`, `anxious`) 외의 다른 값이 전송되고 있습니다. `src/api/diaries.js`나 컴포넌트의 감정 value 값을 확인하세요.
+- **`sleepy` 감정 일기를 저장하려는데 `new row violates check constraint` 에러가 발생한다**:
+  → 기존 테이블의 감정 제약이 새 감정 값을 허용하지 않을 수 있습니다. 3-2단계의 기존 테이블용 `alter table` SQL을 실행해 제약을 갱신하세요.
 - **GitHub Pages 배포 후 빈 화면만 나온다**:
   → `vite.config.js`에 `base: './'` 설정이 있는지 확인하고, 다시 `npm run build` 후 `npx gh-pages -d dist`를 실행하세요.

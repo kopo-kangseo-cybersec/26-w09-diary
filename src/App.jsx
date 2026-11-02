@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { createDiary, deleteDiary, fetchDiaries } from './api/diaries.js'
 
 const emotions = [
-  { value: 'joy', label: '기쁨', emoji: '😊', active: 'border-amber-300 bg-amber-50 text-amber-800' },
-  { value: 'calm', label: '평온', emoji: '😌', active: 'border-teal-300 bg-teal-50 text-teal-800' },
-  { value: 'sad', label: '슬픔', emoji: '😢', active: 'border-sky-300 bg-sky-50 text-sky-800' },
-  { value: 'angry', label: '화남', emoji: '😠', active: 'border-rose-300 bg-rose-50 text-rose-800' },
-  { value: 'anxious', label: '불안', emoji: '😰', active: 'border-violet-300 bg-violet-50 text-violet-800' },
+  { value: 'joy', label: '기쁨', emoji: '😊' },
+  { value: 'calm', label: '평온', emoji: '😌' },
+  { value: 'sad', label: '슬픔', emoji: '😢' },
+  { value: 'angry', label: '화남', emoji: '😠' },
+  { value: 'anxious', label: '불안', emoji: '😰' },
+  { value: 'sleepy', label: '졸림', emoji: '😴' },
 ]
 
 const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
@@ -103,17 +104,17 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f6f2] text-slate-800">
-      <header className="border-b border-[#e9e7df] bg-white/80">
+    <div className="min-h-screen bg-[#fff7fa] text-slate-800">
+      <header className="border-b border-pink-100 bg-white/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
           <a href="/" className="flex items-center gap-3 text-slate-900 no-underline">
-            <span className="grid size-11 place-items-center rounded-2xl bg-emerald-100 text-xl" aria-hidden="true">🌱</span>
+            <span className="grid size-11 place-items-center rounded-2xl bg-pink-100 text-xl" aria-hidden="true">🌷</span>
             <span>
               <span className="block text-lg font-bold tracking-tight">마음 일기</span>
               <span className="block text-xs text-slate-500">오늘의 나를 다정하게 기록해요</span>
             </span>
           </a>
-          <span className="hidden rounded-full bg-[#f7f6f2] px-4 py-2 text-sm text-slate-500 sm:block">
+          <span className="hidden rounded-full bg-pink-50 px-4 py-2 text-sm text-slate-500 sm:block">
             나의 작은 기록장
           </span>
         </div>
@@ -121,7 +122,7 @@ function App() {
 
       <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8 sm:py-12">
         <section className="mb-8 max-w-2xl">
-          <p className="mb-3 text-sm font-semibold tracking-wide text-emerald-700">A LITTLE SPACE FOR YOU</p>
+          <p className="mb-3 text-sm font-semibold tracking-wide text-pink-700">A LITTLE SPACE FOR YOU</p>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">오늘 마음은 어땠나요?</h1>
           <p className="mt-3 leading-7 text-slate-600">
             잘 정리되지 않아도 괜찮아요. 지금 느끼는 감정과 생각을 편하게 남겨보세요.
@@ -133,7 +134,7 @@ function App() {
             className={`mb-6 rounded-2xl border px-4 py-3 text-sm ${
               error
                 ? 'border-rose-200 bg-rose-50 text-rose-800'
-                : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                : 'border-pink-200 bg-pink-50 text-pink-800'
             }`}
             role={error ? 'alert' : 'status'}
           >
@@ -142,7 +143,7 @@ function App() {
         )}
 
         <div className="grid items-start gap-8 lg:grid-cols-[minmax(300px,0.82fr)_minmax(0,1.4fr)]">
-          <section className="rounded-3xl border border-[#eeece5] bg-white p-5 shadow-sm sm:p-7">
+          <section className="rounded-3xl border border-pink-100 bg-white p-5 shadow-sm sm:p-7">
             <div className="mb-6">
               <h2 className="text-xl font-bold text-slate-900">오늘의 마음 남기기</h2>
               <p className="mt-1 text-sm text-slate-500">가장 가까운 감정을 골라주세요.</p>
@@ -151,7 +152,7 @@ function App() {
             <form onSubmit={handleSubmit}>
               <fieldset>
                 <legend className="mb-3 text-sm font-semibold text-slate-700">지금 느끼는 감정</legend>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
                   {emotions.map((emotion) => {
                     const isSelected = selectedEmotion === emotion.value
 
@@ -161,10 +162,10 @@ function App() {
                         type="button"
                         aria-pressed={isSelected}
                         onClick={() => setSelectedEmotion(emotion.value)}
-                        className={`flex min-w-0 flex-col items-center gap-1 rounded-2xl border px-1 py-3 text-xs transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:px-2 ${
+                        className={`flex min-w-0 flex-col items-center gap-1 rounded-2xl border px-1 py-3 text-xs transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600 sm:px-2 ${
                           isSelected
-                            ? `${emotion.active} font-semibold shadow-sm`
-                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                            ? 'border-pink-300 bg-pink-50 font-semibold text-pink-800 shadow-sm'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-pink-200 hover:bg-pink-50/50'
                         }`}
                       >
                         <span className="text-2xl" aria-hidden="true">{emotion.emoji}</span>
@@ -185,7 +186,7 @@ function App() {
                 maxLength={2000}
                 rows={7}
                 placeholder="무슨 일이 있었나요? 어떤 마음이 들었나요?"
-                className="w-full resize-y rounded-2xl border border-slate-200 bg-[#fdfdfc] px-4 py-3 leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                className="w-full resize-y rounded-2xl border border-slate-200 bg-[#fffdfd] px-4 py-3 leading-7 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-100"
               />
               <div className="mt-2 flex items-center justify-between gap-3 text-xs text-slate-500">
                 <span>같은 Supabase 프로젝트를 사용하는 기기에서 확인할 수 있어요.</span>
@@ -195,7 +196,7 @@ function App() {
               <button
                 type="submit"
                 disabled={isSaving || !content.trim() || !selectedEmotion}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-700 px-5 py-3.5 font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-700/50"
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-pink-600 px-5 py-3.5 font-semibold text-white transition hover:bg-pink-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-700 disabled:cursor-not-allowed disabled:bg-pink-600/50"
               >
                 {isSaving && (
                   <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
@@ -248,7 +249,7 @@ function App() {
 
             {isLoading ? (
               <div className="flex min-h-56 flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-white/60 text-slate-500" role="status">
-                <span className="mb-3 size-7 animate-spin rounded-full border-2 border-emerald-200 border-t-emerald-700" aria-hidden="true" />
+                <span className="mb-3 size-7 animate-spin rounded-full border-2 border-pink-200 border-t-pink-600" aria-hidden="true" />
                 일기를 불러오는 중...
               </div>
             ) : visibleDiaries.length === 0 ? (
@@ -267,10 +268,10 @@ function App() {
                   const emotion = emotions.find((item) => item.value === diary.emotion)
 
                   return (
-                    <article key={diary.id} className="rounded-3xl border border-[#eeece5] bg-white p-5 shadow-sm sm:p-6">
+                    <article key={diary.id} className="rounded-3xl border border-pink-100 bg-white p-5 shadow-sm sm:p-6">
                       <div className="mb-4 flex items-start justify-between gap-4">
                         <div className="flex min-w-0 items-center gap-3">
-                          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-[#f7f6f2] text-2xl" aria-hidden="true">
+                          <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-pink-50 text-2xl" aria-hidden="true">
                             {emotion?.emoji || '💭'}
                           </span>
                           <div>
@@ -300,7 +301,7 @@ function App() {
         </div>
       </main>
 
-      <footer className="mt-auto border-t border-[#e9e7df] px-5 py-6 text-center text-xs text-slate-500">
+      <footer className="mt-auto border-t border-pink-100 px-5 py-6 text-center text-xs text-slate-500">
         오늘의 마음도 소중한 나의 일부예요.
       </footer>
     </div>
