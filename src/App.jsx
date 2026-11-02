@@ -10,6 +10,13 @@ const FILTERS = [
   })),
 ]
 
+const TODAY_LABEL = new Intl.DateTimeFormat('ko-KR', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  weekday: 'long',
+}).format(new Date())
+
 function formatDate(dateString) {
   if (!dateString) {
     return ''
@@ -107,15 +114,33 @@ function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <div>
-          <p className="eyebrow">오늘의 마음</p>
-          <h1>감정 일기</h1>
+        <div className="brand-lockup">
+          <div className="brand-mark" aria-hidden="true">
+            📖
+          </div>
+          <div>
+            <p className="eyebrow">작은 순간을 모으는 곳</p>
+            <h1>오늘의 일기장</h1>
+          </div>
+        </div>
+        <div className="header-note">
+          <span aria-hidden="true">✦</span>
+          <p>오늘의 마음도 소중한 한 페이지</p>
         </div>
       </header>
 
       <main className="diary-layout">
         <section className="card composer-card">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">TODAY, IN MY WORDS</p>
+              <h2>오늘은 어떤 하루였나요?</h2>
+            </div>
+            <span className="heading-doodle" aria-hidden="true">✎</span>
+          </div>
+
           <form onSubmit={handleSave}>
+            <p className="field-label">오늘의 기분을 골라 주세요</p>
             <div className="emotion-picker">
               {EMOTION_OPTIONS.map((emotion) => (
                 <button
@@ -131,35 +156,51 @@ function App() {
               ))}
             </div>
 
-            <textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              placeholder="오늘 느낀 감정과 순간을 적어보세요..."
-              maxLength={300}
-              rows={6}
-            />
+            <label className="diary-paper">
+              <span className="paper-date">{TODAY_LABEL}</span>
+              <textarea
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+                placeholder="마음에 남은 순간을 천천히 적어보세요..."
+                maxLength={300}
+                rows={6}
+                aria-label="오늘의 일기"
+              />
+            </label>
 
             <div className="composer-actions">
-              <span className="char-count">{content.length}/300</span>
+              <span className="char-count">한 페이지에 {content.length}/300자</span>
               <button type="submit" className="save-button" disabled={isSaving || !content.trim()}>
-                {isSaving ? '저장 중...' : '저장하기'}
+                <span aria-hidden="true">♡</span>
+                {isSaving ? '간직하는 중...' : '일기장에 간직하기'}
               </button>
             </div>
           </form>
         </section>
 
         <section className="card diary-list-card">
-          <div className="filter-row">
-            {FILTERS.map((filter) => (
-              <button
-                key={filter.value}
-                type="button"
-                className={activeFilter === filter.value ? 'filter-button active' : 'filter-button'}
-                onClick={() => setActiveFilter(filter.value)}
-              >
-                {filter.label}
-              </button>
-            ))}
+          <div className="section-heading list-heading">
+            <div>
+              <p className="section-kicker">LITTLE MOMENTS</p>
+              <h2>차곡차곡 쌓인 이야기</h2>
+            </div>
+            <span className="heading-doodle flower-doodle" aria-hidden="true">✿</span>
+          </div>
+
+          <div className="filter-wrap">
+            <span className="field-label">기분별로 모아보기</span>
+            <div className="filter-row">
+              {FILTERS.map((filter) => (
+                <button
+                  key={filter.value}
+                  type="button"
+                  className={activeFilter === filter.value ? 'filter-button active' : 'filter-button'}
+                  onClick={() => setActiveFilter(filter.value)}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {error && <div className="status-banner error">{error}</div>}
@@ -168,8 +209,9 @@ function App() {
             <div className="status-banner">일기를 불러오는 중입니다...</div>
           ) : visibleEntries.length === 0 ? (
             <div className="empty-state">
-              <p>아직 기록이 없어요.</p>
-              <span>오늘의 감정을 먼저 남겨보세요.</span>
+              <span className="empty-illustration" aria-hidden="true">🌷</span>
+              <p>아직 비어 있는 페이지예요</p>
+              <span>오늘의 작은 순간부터 채워 볼까요?</span>
             </div>
           ) : (
             <ul className="diary-list">
@@ -188,6 +230,7 @@ function App() {
                         className="delete-button"
                         onClick={() => handleDelete(entry.id)}
                         disabled={deletingId === entry.id}
+                        aria-label={`${formatDate(entry.created_at)} 일기 삭제`}
                       >
                         {deletingId === entry.id ? '삭제 중...' : '삭제'}
                       </button>
