@@ -1,5 +1,65 @@
 const fs = require('fs');
 
+async function callGemini(model, apiKey, prompt) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const payload = {
+    contents: [{
+      role: 'user',
+      parts: [{ text: prompt }]
+    }],
+    generationConfig: {
+      temperature: 0.2,
+      maxOutputTokens: 2048,
+      thinkingConfig: {
+        thinkingBudget: 0
+      }
+    }
+  };
+
+  console.log(`[Gemini] ${model} 모델 호출 시작...`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 35000);
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`[Gemini] ${model} HTTP Error ${res.status}:`, errText);
+      return null;
+    }
+
+    const data = await res.json();
+    const candidate = data.candidates?.[0];
+    if (!candidate || !candidate.content || !candidate.content.parts) {
+      console.error('[Gemini] 빈 응답 수신:', JSON.stringify(data));
+      return null;
+    }
+
+    // 모든 text 파트 병합 (thinking 파트 분리 고려)
+    const reply = candidate.content.parts
+      .map(p => p.text || '')
+      .filter(Boolean)
+      .join('\n')
+      .trim();
+
+    return reply;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.error(`[Gemini] ${model} 호출 예외:`, err.message);
+    return null;
+  }
+}
+
 async function main() {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -44,46 +104,23 @@ async function main() {
 #### 🎯 종합 판정: [통과 (PASS)] 또는 [보완 필요]
 `;
 
-  const payload = {
-    contents: [{
-      parts: [{
-        text: `${systemPrompt}\n\n## [학생이 제출한 PR 본문]\n${prBody}\n\n## [코드 변경점 Diff]\n${prDiff}`
-      }]
-    }],
-    generationConfig: {
-      temperature: 0.2,
-      maxOutputTokens: 2048
-    }
-  };
+  const fullPrompt = `${systemPrompt}\n\n## [학생이 제출한 PR 본문]\n${prBody}\n\n## [코드 변경점 Diff]\n${prDiff}`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+  // 1차 시도: gemini-3.8-flash, 실패 시 fallback: gemini-1.5-flash
+  let reply = await callGemini('gemini-3.8-flash', apiKey, fullPrompt);
+  if (!reply) {
+    console.log('[Gemini] gemini-1.5-flash 모델로 대체 시도...');
+    reply = await callGemini('gemini-1.5-flash', apiKey, fullPrompt);
+  }
 
-  try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('Gemini API HTTP Error:', res.status, errText);
-      fs.writeFileSync('result_comment.txt', `### ⚠️ 채점 시스템 안내\nGemini API 응답 오류 (HTTP ${res.status}). 과제는 정상 접수되었습니다.`);
-      fs.writeFileSync('summary.txt', `API 오류 (HTTP ${res.status})`);
-      return;
-    }
-
-    const data = await res.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '채점 결과를 생성하지 못했습니다.';
+  if (reply) {
     fs.writeFileSync('result_comment.txt', reply);
-
     const isPass = reply.includes('통과') || reply.includes('PASS');
     fs.writeFileSync('summary.txt', isPass ? '통과 (PASS)' : '보완 필요');
-    console.log('Gemini 채점 완료:', isPass ? 'PASS' : 'RETRY');
-  } catch (err) {
-    console.error('Gemini 요청 처리 중 예외 발생:', err);
-    fs.writeFileSync('result_comment.txt', '### ⚠️ 채점 시스템 안내\n자동 채점 처리 중 예외가 발생했습니다. 과제는 정상 접수되었습니다.');
-    fs.writeFileSync('summary.txt', '채점 처리 예외');
+    console.log('[Gemini] 채점 완료:', isPass ? 'PASS' : 'RETRY');
+  } else {
+    fs.writeFileSync('result_comment.txt', '### ⚠️ 과제 제출 접수 완료\n과제는 정상 접수되었으나 일시적인 AI 서비스 응답 지연으로 자동 채점 리포트가 생성되지 않았습니다. 교수가 직접 검토할 예정입니다.');
+    fs.writeFileSync('summary.txt', '접수 완료 (AI 응답 지연)');
   }
 }
 
