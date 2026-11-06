@@ -1,0 +1,227 @@
+name: 과제 자동 채점 및 알림 (Auto Grading & Slack Notification)
+
+on:
+  pull_request_target:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+  issues: write
+
+jobs:
+  grade-and-notify:
+    # main 브랜치로 들어오는 PR만 채점
+    if: github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: GitHub CLI 인증 설정
+        run: echo "GH_TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+
+      - name: PR 정보 및 변경사항(diff) 수집
+        id: pr_data
+        run: |
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          PR_AUTHOR="${{ github.event.pull_request.user.login }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          
+          # PR 본문 추출
+          PR_BODY=$(gh pr view "$PR_NUMBER" --json body -q .body)
+          
+          # diff 추출 (최대 1000줄로 제한하여 토큰 절약)
+          DIFF_CONTENT=$(gh pr diff "$PR_NUMBER" | head -n 1000)
+
+          # 환경변수 export
+          {
+            echo "PR_NUMBER=$PR_NUMBER"
+            echo "PR_TITLE=$PR_TITLE"
+            echo "PR_AUTHOR=$PR_AUTHOR"
+            echo "PR_URL=$PR_URL"
+          } >> $GITHUB_ENV
+          
+          # 임시 파일로 저장
+          echo "$PR_BODY" > pr_body.txt
+          echo "$DIFF_CONTENT" > pr_diff.txt
+
+      - name: Gemini API 자동 채점 및 피드백 생성
+        id: gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          node - << 'EOF'
+          const fs = require('fs');
+          const https = require('https');
+
+          const apiKey = process.env.GEMINI_API_KEY;
+          if (!apiKey) {
+            console.log("::warning::GEMINI_API_KEY가 등록되지 않았습니다. 기본 접수 코멘트만 등록합니다.");
+            fs.writeFileSync('result_comment.txt', "### ✅ 과제 제출 접수 완료\n과제가 정상적으로 접수되었습니다. (자동 채점 API 키 설정 대기 중)");
+            fs.writeFileSync('summary.txt', "기본 접수 완료 (Gemini API 키 미설정)");
+            process.exit(0);
+          }
+
+          const prBody = fs.readFileSync('pr_body.txt', 'utf8');
+          const prDiff = fs.readFileSync('pr_diff.txt', 'utf8');
+          const author = process.env.PR_AUTHOR;
+
+          const systemPrompt = `당신은 한국폴리텍대학 강서캠퍼스 사이버보안과 1학년 「웹콘텐츠 제작」 수업의 AI 채점 조교입니다.
+학생이 제출한 PR 본문과 코드 변경점(diff)을 검토하여 정중하고 친절한 어조(존댓말)로 전문적인 채점 피드백을 작성해 주세요.
+
+## 9주차 감정 다이어리 채점 기준표
+1. [보안 점검]
+   - diff에 .env, .env.local 등 실제 환경변수 파일이나 시크릿 키가 커밋되어 있는지 확인. (절대 없어야 함! 발견 시 엄중 경고)
+   - 소스 코드에 키가 하드코딩되지 않고 import.meta.env로 올바르게 분리되었는지 확인.
+2. [아키텍처 모듈화]
+   - src/lib/supabase.js (클라이언트 초기화) 및 src/api/diaries.js (CRUD 분리) 계층 분리가 적용되었는지 확인.
+3. [배포 및 완성도]
+   - PR 본문에 Netlify 및 GitHub Pages 배포 URL이 적혀 있는지 확인.
+   - 체크리스트가 성실하게 체크되었는지 확인.
+4. [성찰 및 한 줄 소감]
+   - localStorage(8주차) vs Supabase(9주차) 차이점 등 소감이 성의 있게 작성되었는지 확인.
+
+## 출력 형식 (Markdown)
+### 📋 9주차 과제 채점 리포트 (${author} 학생)
+
+| 평가 항목 | 결과 | 코멘트 |
+|---|:---:|---|
+| 🛡️ 보안 수칙 (.env 제외, 키 분리) | ✅ PASS / ⚠️ 주의 | 내용 요약 |
+| 🏗️ 아키텍처 (lib/api 모듈화) | ✅ PASS / ⚠️ 보완 | 내용 요약 |
+| 🚀 배포 (Netlify & Pages) | ✅ PASS / ⚠️ 확인 | 내용 요약 |
+| ✍️ 한 줄 소감 및 성찰 | ✅ PASS / 💬 조언 | 피드백 요약 |
+
+#### 💡 총평 및 피드백
+- 학생의 구현 노력을 칭찬하고 개선 포인트를 친절하게 짚어주세요.
+
+#### 🎯 종합 판정: [통과 (PASS)] 또는 [보완 필요]
+`;
+
+          const payload = JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `${systemPrompt}\n\n## [학생이 제출한 PR 본문]\n${prBody}\n\n## [코드 변경점 Diff]\n${prDiff}`
+              }]
+            }],
+            generationConfig: {
+              temperature: 0.2,
+              maxOutputTokens: 2048
+            }
+          });
+
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+          const req = https.request(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(payload)
+            }
+          }, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+              try {
+                const response = JSON.parse(data);
+                const reply = response.candidates?.[0]?.content?.parts?.[0]?.text || "채점 결과를 생성하지 못했습니다.";
+                fs.writeFileSync('result_comment.txt', reply);
+
+                const isPass = reply.includes("통과") || reply.includes("PASS");
+                fs.writeFileSync('summary.txt', isPass ? "통과 (PASS)" : "보완 필요 (재검토)");
+              } catch (e) {
+                console.error("Gemini 파싱 오류:", e);
+                fs.writeFileSync('result_comment.txt', "채점 처리 중 오류가 발생했습니다.");
+                fs.writeFileSync('summary.txt', "오류 발생");
+              }
+            });
+          });
+
+          req.on('error', (e) => {
+            console.error("요청 실패:", e);
+            fs.writeFileSync('result_comment.txt', "Gemini API 호출에 실패했습니다.");
+            fs.writeFileSync('summary.txt', "API 호출 실패");
+          });
+
+          req.write(payload);
+          req.end();
+          EOF
+
+      - name: PR에 채점 코멘트 등록 및 PR 자동 Close
+        run: |
+          PR_NUMBER="${{ env.PR_NUMBER }}"
+          
+          # 평가 코멘트 등록
+          gh pr comment "$PR_NUMBER" --body-file result_comment.txt
+          
+          # PR 자동 Close 처리 (과제 접수 완료)
+          gh pr close "$PR_NUMBER" --comment "🎉 과제 제출 및 자동 채점 검토가 완료되어 PR을 자동으로 Close합니다. 수고 많으셨습니다!"
+
+      - name: Slack 채널 알림 발송
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL이 설정되지 않아 슬랙 알림을 건너뜁니다."
+            exit 0
+          fi
+          
+          SUMMARY=$(cat summary.txt)
+          PR_URL="${{ env.PR_URL }}"
+          PR_AUTHOR="${{ env.PR_AUTHOR }}"
+          PR_TITLE="${{ env.PR_TITLE }}"
+          
+          JSON_PAYLOAD=$(cat <<EOF
+          {
+            "blocks": [
+              {
+                "type": "header",
+                "text": {
+                  "type": "plain_text",
+                  "text": "📬 [웹콘텐츠 제작] 새 과제 제출 및 채점 완료",
+                  "emoji": true
+                }
+              },
+              {
+                "type": "section",
+                "fields": [
+                  {
+                    "type": "mrkdwn",
+                    "text": "*제출자:* ${PR_AUTHOR}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*종합 판정:* ${SUMMARY}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*과제명:* ${PR_TITLE}"
+                  },
+                  {
+                    "type": "mrkdwn",
+                    "text": "*상태:* Closed (접수 완료)"
+                  }
+                ]
+              },
+              {
+                "type": "actions",
+                "elements": [
+                  {
+                    "type": "button",
+                    "text": {
+                      "type": "plain_text",
+                      "text": "PR 상세 및 채점 결과 보기",
+                      "emoji": true
+                    },
+                    "url": "${PR_URL}",
+                    "style": "primary"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+          )
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$JSON_PAYLOAD" \
+            "$SLACK_WEBHOOK_URL"
