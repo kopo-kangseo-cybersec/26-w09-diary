@@ -1,5 +1,32 @@
 const fs = require('fs');
 
+async function getAvailableModel(apiKey) {
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+    if (res.ok) {
+      const data = await res.json();
+      const models = (data.models || []).map(m => m.name.replace('models/', ''));
+      console.log('[Gemini] 지원 모델 목록:', models.join(', '));
+      
+      // 우선순위 모델 검색
+      const candidates = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.8-flash'];
+      for (const c of candidates) {
+        if (models.includes(c)) {
+          console.log(`[Gemini] 최적 모델 선택됨: ${c}`);
+          return c;
+        }
+      }
+      const anyFlash = models.find(m => m.includes('flash'));
+      if (anyFlash) return anyFlash;
+    } else {
+      console.error('[Gemini] 모델 목록 HTTP 오류:', res.status);
+    }
+  } catch (e) {
+    console.error('[Gemini] 모델 목록 조회 예외:', e.message);
+  }
+  return 'gemini-2.5-flash';
+}
+
 async function callGemini(model, apiKey, prompt) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const payload = {
@@ -9,16 +36,13 @@ async function callGemini(model, apiKey, prompt) {
     }],
     generationConfig: {
       temperature: 0.2,
-      maxOutputTokens: 2048,
-      thinkingConfig: {
-        thinkingBudget: 0
-      }
+      maxOutputTokens: 2048
     }
   };
 
-  console.log(`[Gemini] ${model} 모델 호출 시작...`);
+  console.log(`[Gemini] ${model} 모델 채점 생성 요청 시작...`);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 35000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초
 
   try {
     const res = await fetch(url, {
@@ -41,11 +65,11 @@ async function callGemini(model, apiKey, prompt) {
     const data = await res.json();
     const candidate = data.candidates?.[0];
     if (!candidate || !candidate.content || !candidate.content.parts) {
-      console.error('[Gemini] 빈 응답 수신:', JSON.stringify(data));
+      console.error('[Gemini] 응답에 후보가 없음:', JSON.stringify(data));
       return null;
     }
 
-    // 모든 text 파트 병합 (thinking 파트 분리 고려)
+    // text 파트 추출
     const reply = candidate.content.parts
       .map(p => p.text || '')
       .filter(Boolean)
@@ -55,7 +79,7 @@ async function callGemini(model, apiKey, prompt) {
     return reply;
   } catch (err) {
     clearTimeout(timeoutId);
-    console.error(`[Gemini] ${model} 호출 예외:`, err.message);
+    console.error(`[Gemini] ${model} 요청 중 오류:`, err.message);
     return null;
   }
 }
@@ -106,20 +130,16 @@ async function main() {
 
   const fullPrompt = `${systemPrompt}\n\n## [학생이 제출한 PR 본문]\n${prBody}\n\n## [코드 변경점 Diff]\n${prDiff}`;
 
-  // 1차 시도: gemini-3.8-flash, 실패 시 fallback: gemini-1.5-flash
-  let reply = await callGemini('gemini-3.8-flash', apiKey, fullPrompt);
-  if (!reply) {
-    console.log('[Gemini] gemini-1.5-flash 모델로 대체 시도...');
-    reply = await callGemini('gemini-1.5-flash', apiKey, fullPrompt);
-  }
+  const selectedModel = await getAvailableModel(apiKey);
+  let reply = await callGemini(selectedModel, apiKey, fullPrompt);
 
   if (reply) {
     fs.writeFileSync('result_comment.txt', reply);
     const isPass = reply.includes('통과') || reply.includes('PASS');
     fs.writeFileSync('summary.txt', isPass ? '통과 (PASS)' : '보완 필요');
-    console.log('[Gemini] 채점 완료:', isPass ? 'PASS' : 'RETRY');
+    console.log('[Gemini] 채점 성공 완료:', isPass ? 'PASS' : 'RETRY');
   } else {
-    fs.writeFileSync('result_comment.txt', '### ⚠️ 과제 제출 접수 완료\n과제는 정상 접수되었으나 일시적인 AI 서비스 응답 지연으로 자동 채점 리포트가 생성되지 않았습니다. 교수가 직접 검토할 예정입니다.');
+    fs.writeFileSync('result_comment.txt', '### ⚠️ 과제 제출 접수 완료\n과제는 정상 접수되었으나 일시적인 AI 서비스 응답 지연으로 자동 채점 리포트 생성이 지연되었습니다. 교수가 직접 검토할 예정입니다.');
     fs.writeFileSync('summary.txt', '접수 완료 (AI 응답 지연)');
   }
 }
