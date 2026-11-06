@@ -6,25 +6,21 @@ async function getAvailableModel(apiKey) {
     if (res.ok) {
       const data = await res.json();
       const models = (data.models || []).map(m => m.name.replace('models/', ''));
-      console.log('[Gemini] 지원 모델 목록:', models.join(', '));
-      
-      // 우선순위 모델 검색
-      const candidates = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-3.8-flash'];
+      console.log('[Gemini] 지원 모델 수:', models.length);
+
+      // 우선순위: 최신 플래시 별칭 -> 3.8 -> 3.7
+      const candidates = ['gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash'];
       for (const c of candidates) {
         if (models.includes(c)) {
-          console.log(`[Gemini] 최적 모델 선택됨: ${c}`);
+          console.log(`[Gemini] 모델 선택: ${c}`);
           return c;
         }
       }
-      const anyFlash = models.find(m => m.includes('flash'));
-      if (anyFlash) return anyFlash;
-    } else {
-      console.error('[Gemini] 모델 목록 HTTP 오류:', res.status);
     }
   } catch (e) {
     console.error('[Gemini] 모델 목록 조회 예외:', e.message);
   }
-  return 'gemini-2.5-flash';
+  return 'gemini-flash-latest';
 }
 
 async function callGemini(model, apiKey, prompt) {
@@ -40,9 +36,9 @@ async function callGemini(model, apiKey, prompt) {
     }
   };
 
-  console.log(`[Gemini] ${model} 모델 채점 생성 요청 시작...`);
+  console.log(`[Gemini] ${model} 모델 채점 생성 요청 시작 (타임아웃 90초)...`);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000); // 60초
+  const timeoutId = setTimeout(() => controller.abort(), 90000); // 90초 여유
 
   try {
     const res = await fetch(url, {
@@ -132,6 +128,11 @@ async function main() {
 
   const selectedModel = await getAvailableModel(apiKey);
   let reply = await callGemini(selectedModel, apiKey, fullPrompt);
+
+  if (!reply && selectedModel !== 'gemini-flash-latest') {
+    console.log('[Gemini] gemini-flash-latest로 대체 시도...');
+    reply = await callGemini('gemini-flash-latest', apiKey, fullPrompt);
+  }
 
   if (reply) {
     fs.writeFileSync('result_comment.txt', reply);
