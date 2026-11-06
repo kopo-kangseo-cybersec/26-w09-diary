@@ -60,7 +60,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           PR_AUTHOR: ${{ env.PR_AUTHOR }}
-        run: node .github/scripts/grade.js
+        run: node .github/scripts/grade.cjs
 
       - name: PR에 채점 코멘트 등록 및 PR 자동 Close
         run: |
