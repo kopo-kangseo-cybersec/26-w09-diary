@@ -1,28 +1,5 @@
 const fs = require('fs');
 
-async function getAvailableModel(apiKey) {
-  try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-    if (res.ok) {
-      const data = await res.json();
-      const models = (data.models || []).map(m => m.name.replace('models/', ''));
-      console.log('[Gemini] 지원 모델 수:', models.length);
-
-      // 우선순위: 최신 플래시 별칭 -> 3.8 -> 3.7
-      const candidates = ['gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash'];
-      for (const c of candidates) {
-        if (models.includes(c)) {
-          console.log(`[Gemini] 모델 선택: ${c}`);
-          return c;
-        }
-      }
-    }
-  } catch (e) {
-    console.error('[Gemini] 모델 목록 조회 예외:', e.message);
-  }
-  return 'gemini-flash-latest';
-}
-
 async function callGemini(model, apiKey, prompt) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
   const payload = {
@@ -36,9 +13,9 @@ async function callGemini(model, apiKey, prompt) {
     }
   };
 
-  console.log(`[Gemini] ${model} 모델 채점 생성 요청 시작 (타임아웃 90초)...`);
+  console.log(`[Gemini] ${model} 모델 채점 생성 요청 시작 (타임아웃 120초)...`);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 90000); // 90초 여유
+  const timeoutId = setTimeout(() => controller.abort(), 120000);
 
   try {
     const res = await fetch(url, {
@@ -65,7 +42,6 @@ async function callGemini(model, apiKey, prompt) {
       return null;
     }
 
-    // text 파트 추출
     const reply = candidate.content.parts
       .map(p => p.text || '')
       .filter(Boolean)
@@ -90,15 +66,16 @@ async function main() {
   }
 
   const prBody = fs.existsSync('pr_body.txt') ? fs.readFileSync('pr_body.txt', 'utf8') : '';
+  const prFiles = fs.existsSync('pr_files.txt') ? fs.readFileSync('pr_files.txt', 'utf8') : '';
   const prDiff = fs.existsSync('pr_diff.txt') ? fs.readFileSync('pr_diff.txt', 'utf8') : '';
   const author = process.env.PR_AUTHOR || '학생';
 
   const systemPrompt = `당신은 한국폴리텍대학 강서캠퍼스 사이버보안과 1학년 「웹콘텐츠 제작」 수업의 AI 채점 조교입니다.
-학생이 제출한 PR 본문과 코드 변경점(diff)을 검토하여 정중하고 친절한 어조(존댓말)로 전문적인 채점 피드백을 작성해 주세요.
+학생이 제출한 PR 본문, 변경 파일 목록, 주요 diff를 검토하여 정중하고 친절한 어조(존댓말)로 전문적인 채점 피드백을 작성해 주세요.
 
 ## 9주차 감정 다이어리 채점 기준표
 1. [보안 점검]
-   - diff에 .env, .env.local 등 실제 환경변수 파일이나 시크릿 키가 커밋되어 있는지 확인. (절대 없어야 함! 발견 시 엄중 경고)
+   - 변경 파일 목록이나 diff에 .env, .env.local 등 실제 환경변수 파일이나 시크릿 키가 커밋되어 있는지 확인. (절대 없어야 함! 발견 시 엄중 경고)
    - 소스 코드에 키가 하드코딩되지 않고 import.meta.env로 올바르게 분리되었는지 확인.
 2. [아키텍처 모듈화]
    - src/lib/supabase.js (클라이언트 초기화) 및 src/api/diaries.js (CRUD 분리) 계층 분리가 적용되었는지 확인.
@@ -124,14 +101,18 @@ async function main() {
 #### 🎯 종합 판정: [통과 (PASS)] 또는 [보완 필요]
 `;
 
-  const fullPrompt = `${systemPrompt}\n\n## [학생이 제출한 PR 본문]\n${prBody}\n\n## [코드 변경점 Diff]\n${prDiff}`;
+  const fullPrompt = `${systemPrompt}\n\n## [학생이 제출한 PR 본문]\n${prBody}\n\n## [변경된 파일 목록]\n${prFiles}\n\n## [주요 코드 Diff]\n${prDiff}`;
 
-  const selectedModel = await getAvailableModel(apiKey);
-  let reply = await callGemini(selectedModel, apiKey, fullPrompt);
+  // 1차 시도: gemini-3.8-flash, 실패 시 gemini-2.5-flash-lite, gemini-flash-latest 순서
+  const models = ['gemini-3.8-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
+  let reply = null;
 
-  if (!reply && selectedModel !== 'gemini-flash-latest') {
-    console.log('[Gemini] gemini-flash-latest로 대체 시도...');
-    reply = await callGemini('gemini-flash-latest', apiKey, fullPrompt);
+  for (const m of models) {
+    reply = await callGemini(m, apiKey, fullPrompt);
+    if (reply) {
+      console.log(`[Gemini] ${m} 모델 채점 성공!`);
+      break;
+    }
   }
 
   if (reply) {

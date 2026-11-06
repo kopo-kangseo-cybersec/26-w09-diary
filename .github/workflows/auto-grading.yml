@@ -47,8 +47,11 @@ jobs:
           # PR 본문 추출
           gh pr view "$PR_NUMBER" --json body -q .body > pr_body.txt
           
-          # diff 추출 (최대 1000줄로 제한하여 토큰 절약)
-          gh pr diff "$PR_NUMBER" | head -n 1000 > pr_diff.txt
+          # 변경 파일 목록 추출
+          gh pr diff "$PR_NUMBER" --name-only > pr_files.txt
+          
+          # 핵심 diff 추출 (최대 300줄)
+          gh pr diff "$PR_NUMBER" | head -n 300 > pr_diff.txt
 
           # 환경변수 저장
           echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
