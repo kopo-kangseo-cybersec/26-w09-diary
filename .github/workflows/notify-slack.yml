@@ -1,0 +1,69 @@
+name: 최종 채점 완료 Slack 알림 (Final Notification)
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: '발송할 알림 메시지'
+        required: true
+        default: '3주차부터 9주차까지 전체 실습 과제에 대한 자동 채점 및 종합 평가표 작성이 완료되었습니다.'
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Slack 채널 알림 발송
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          MESSAGE: ${{ inputs.message }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL이 설정되어 있지 않습니다."
+            exit 1
+          fi
+
+          PAYLOAD=$(jq -nc --arg msg "$MESSAGE" '{
+            text: "🎉 [웹콘텐츠 제작] 전체 주차(3~9주차) 과제 채점 및 평가 리포트 생성 완료!",
+            blocks: [
+              {
+                type: "header",
+                text: {
+                  type: "plain_text",
+                  text: "🎉 [웹콘텐츠 제작] 3~9주차 과제 채점 완료 리포트"
+                }
+              },
+              {
+                type: "section",
+                text: {
+                  type: "mrkdwn",
+                  text: $msg
+                }
+              },
+              {
+                type: "section",
+                fields: [
+                  {
+                    type: "mrkdwn",
+                    text: "*평가 주차:*\n3주 ~ 9주차 (총 7개 주차, 8개 저장소)"
+                  },
+                  {
+                    type: "mrkdwn",
+                    text: "*총 검토 PR:*\n약 150건 (전수 채점 및 라벨링 완료)"
+                  },
+                  {
+                    type: "mrkdwn",
+                    text: "*종합 보고서 보관 위치:*\n`webdev-26-projects/reports/`"
+                  },
+                  {
+                    type: "mrkdwn",
+                    text: "*채점 엔진:*\nGoogle Gemini (`gemini-3.5-flash-lite`)"
+                  }
+                ]
+              }
+            ]
+          }')
+
+          curl -X POST -H 'Content-type: application/json' --data "$PAYLOAD" "$SLACK_WEBHOOK_URL"
