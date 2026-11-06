@@ -13,9 +13,9 @@ async function callGemini(model, apiKey, prompt) {
     }
   };
 
-  console.log(`[Gemini] ${model} 모델 채점 생성 요청 시작 (타임아웃 120초)...`);
+  console.log(`[Gemini] ${model} 모델 채점 생성 요청 시작 (타임아웃 30초)...`);
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 120000);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
     const res = await fetch(url, {
@@ -103,8 +103,8 @@ async function main() {
 
   const fullPrompt = `${systemPrompt}\n\n## [학생이 제출한 PR 본문]\n${prBody}\n\n## [변경된 파일 목록]\n${prFiles}\n\n## [주요 코드 Diff]\n${prDiff}`;
 
-  // 1차 시도: gemini-3.8-flash, 실패 시 gemini-2.5-flash-lite, gemini-flash-latest 순서
-  const models = ['gemini-3.8-flash', 'gemini-2.5-flash-lite', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
+  // 초고속 최신 모델 우선: gemini-3.5-flash-lite (약 2초 완료) -> gemini-flash-latest -> gemini-3.8-flash
+  const models = ['gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash'];
   let reply = null;
 
   for (const m of models) {
