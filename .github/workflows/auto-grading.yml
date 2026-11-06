@@ -65,15 +65,27 @@ jobs:
           PR_AUTHOR: ${{ env.PR_AUTHOR }}
         run: node .github/scripts/grade.cjs
 
-      - name: PR에 채점 코멘트 등록 및 PR 자동 Close
+      - name: PR 상태 및 라벨 자동 처리
         run: |
           PR_NUMBER="${{ env.PR_NUMBER }}"
           
-          # 평가 코멘트 등록
+          # 1. 평가 코멘트 등록
           gh pr comment "$PR_NUMBER" --body-file result_comment.txt
           
-          # PR 자동 Close 처리 (과제 접수 완료)
-          gh pr close "$PR_NUMBER" --comment "🎉 과제 제출 및 자동 채점 검토가 완료되어 PR을 자동으로 Close합니다. 수고 많으셨습니다!"
+          # 2. 판정 결과에 따른 라벨 부착 및 Close/Open 분기
+          STATUS=$(cat status.txt 2>/dev/null || echo "RETRY")
+          
+          if [ "$STATUS" = "PASS" ]; then
+            echo "판정 결과: 통과 (PASS) -> '통과' 라벨 부착 및 PR 자동 Close"
+            gh pr edit "$PR_NUMBER" --remove-label "보완 필요" 2>/dev/null || true
+            gh pr edit "$PR_NUMBER" --add-label "통과"
+            gh pr close "$PR_NUMBER" --comment "🎉 과제 제출 및 자동 채점 검토가 완료되어 PR을 자동으로 Close합니다. 수고 많으셨습니다!"
+          else
+            echo "판정 결과: 보완 필요 (RETRY) -> '보완 필요' 라벨 부착 및 PR Open 유지"
+            gh pr edit "$PR_NUMBER" --remove-label "통과" 2>/dev/null || true
+            gh pr edit "$PR_NUMBER" --add-label "보완 필요"
+            gh pr comment "$PR_NUMBER" --body "📢 보완이 필요한 항목이 확인되어 PR을 Open 상태로 유지합니다. 위의 채점 리포트를 확인하신 후 수정하여 다시 push해 주세요!"
+          fi
 
       - name: Slack 채널 알림 발송
         env:
@@ -88,10 +100,17 @@ jobs:
           fi
           
           SUMMARY=$(cat summary.txt 2>/dev/null || echo "과제 채점 완료")
+          STATUS=$(cat status.txt 2>/dev/null || echo "RETRY")
+          
+          if [ "$STATUS" = "PASS" ]; then
+            EMOJI="✅"
+          else
+            EMOJI="⚠️"
+          fi
           
           # Slack 알림 전송 (JSON 안전 생성)
           PAYLOAD=$(jq -nc \
-            --arg text "📬 [웹콘텐츠 제작] 새 과제 제출: ${PR_AUTHOR} - ${SUMMARY} (${PR_URL})" \
+            --arg text "${EMOJI} [웹콘텐츠 제작] 과제 채점: ${PR_AUTHOR} - ${SUMMARY} (${PR_URL})" \
             '{"text": $text}')
           
           curl -s -X POST -H 'Content-type: application/json' \
