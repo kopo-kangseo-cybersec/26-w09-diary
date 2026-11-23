@@ -1,122 +1,122 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react'
+import Header from './components/Header'
+import DiaryForm from './components/DiaryForm'
+import EmotionFilter from './components/EmotionFilter'
+import DiaryList from './components/DiaryList'
+import { getDiaries, createDiary, deleteDiary } from './api/diaries'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [diaries, setDiaries] = useState([])
+  const [currentFilter, setCurrentFilter] = useState('all')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState(null)
+  const [error, setError] = useState(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  // 컴포넌트 마운트, 필터 변경, 수동 갱신 트리거 시 목록 조회
+  useEffect(() => {
+    let isCancelled = false
+
+    const fetchDiaries = async () => {
+      try {
+        const data = await getDiaries(currentFilter)
+        if (!isCancelled) {
+          setDiaries(data)
+          setError(null)
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          console.error('일기 목록 로드 실패:', err)
+          setError(err)
+        }
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    fetchDiaries()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [currentFilter, refreshTrigger])
+
+  const handleFilterChange = (filter) => {
+    setIsLoading(true)
+    setCurrentFilter(filter)
+  }
+
+  const handleRefresh = () => {
+    setIsLoading(true)
+    setRefreshTrigger((prev) => prev + 1)
+  }
+
+  // 일기 작성 처리
+  const handleCreateDiary = async ({ content, emotion }) => {
+    setIsSubmitting(true)
+    try {
+      await createDiary({ content, emotion })
+      // 작성 성공 시 목록 다시 조회
+      setIsLoading(true)
+      setRefreshTrigger((prev) => prev + 1)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  // 일기 삭제 처리
+  const handleDeleteDiary = async (id) => {
+    setDeletingId(id)
+    try {
+      await deleteDiary(id)
+      // 삭제 성공 시 목록 다시 조회
+      setIsLoading(true)
+      setRefreshTrigger((prev) => prev + 1)
+    } catch (err) {
+      alert(err.message || '삭제 중 오류가 발생했습니다.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="min-h-screen bg-slate-50 text-slate-800 pb-16">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        {/* 앱 상단 헤더 */}
+        <Header />
 
-      <div className="ticks"></div>
+        {/* 일기 작성 폼 */}
+        <section className="mb-6">
+          <DiaryForm
+            onSubmit={handleCreateDiary}
+            isSubmitting={isSubmitting}
+          />
+        </section>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {/* 감정 필터 바 */}
+        <section>
+          <EmotionFilter
+            currentFilter={currentFilter}
+            onSelectFilter={handleFilterChange}
+          />
+        </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        {/* 일기 목록 영역 */}
+        <main>
+          <DiaryList
+            diaries={diaries}
+            isLoading={isLoading}
+            error={error}
+            currentFilter={currentFilter}
+            onRetry={handleRefresh}
+            onDelete={handleDeleteDiary}
+            deletingId={deletingId}
+          />
+        </main>
+      </div>
+    </div>
   )
 }
-
-export default App
