@@ -28,8 +28,8 @@ Vite와 React로 화면을 구성하고, Tailwind CSS로 모바일·데스크톱
 
 ## 실행 및 배포 링크
 
-- Netlify 배포 URL: 
-- GitHub Pages 배포 URL: 
+- Netlify 배포 URL: https://shimmering-creponne-7c8627.netlify.app
+- GitHub Pages 배포 URL: https://kyudyssey.github.io/26-w09-diary/
 
 ## 커스터마이징한 부분
 
